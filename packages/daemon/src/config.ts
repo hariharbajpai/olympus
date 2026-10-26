@@ -9,6 +9,12 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 /** Repo root: this file lives in packages/daemon/{src,dist}/. */
 export const repoRoot = path.resolve(here, '../../..');
 
+/** The dashboard build next to the bundled daemon (installed plugin), else the repo's own build. */
+function defaultDashboardDir(): string {
+  const bundled = path.join(here, 'dashboard');
+  return existsSync(path.join(bundled, 'index.html')) ? bundled : path.join(repoRoot, 'packages/dashboard/dist');
+}
+
 /**
  * Loads KEY=value lines from the repo's .env (or OLYMPUS_ENV_FILE) into process.env.
  * Values already set in the environment win. Optional: Olympus needs no API key.
@@ -65,7 +71,7 @@ export function readConfig(): DaemonConfig {
     port,
     workspaceDir,
     stateDir: path.join(workspaceDir, '.olympus'),
-    dashboardDir: process.env.OLYMPUS_DASHBOARD_DIR ?? path.join(repoRoot, 'packages/dashboard/dist'),
+    dashboardDir: process.env.OLYMPUS_DASHBOARD_DIR ?? defaultDashboardDir(),
     allowedOrigins: [`http://127.0.0.1:${port}`, `http://localhost:${port}`, ...extraOrigins],
     maxConcurrency: numberFromEnv('OLYMPUS_MAX_CONCURRENCY', 4),
     // Phase 0 keeps runs short so they don't eat into the Owner's Claude plan.

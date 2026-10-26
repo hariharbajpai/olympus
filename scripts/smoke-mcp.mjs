@@ -7,9 +7,12 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// OLYMPUS_PLUGIN_DIR points at a copy of plugin/ (to test it the way a GitHub install runs it).
+const pluginDir = process.env.OLYMPUS_PLUGIN_DIR ?? path.join(root, 'plugin');
 const transport = new StdioClientTransport({
   command: process.execPath,
-  args: [path.join(root, 'plugin/dist/olympus-mcp.mjs')],
+  args: [path.join(pluginDir, 'dist/olympus-mcp.mjs')],
+  env: Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined)),
 });
 const client = new Client({ name: 'olympus-smoke', version: '0.0.1' });
 await client.connect(transport);

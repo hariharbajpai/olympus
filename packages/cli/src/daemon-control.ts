@@ -17,24 +17,20 @@ export const logFile = path.join(stateDir, 'daemon.log');
 export const pidFile = path.join(stateDir, 'daemon.pid');
 
 /**
- * Finds the daemon: OLYMPUS_DAEMON_ENTRY, then packages/daemon/dist/main.js walking up from this file
- * (the plugin running in place from the repo), then the path the build wrote into
- * plugin/dist/daemon-entry.json (the plugin copied somewhere else).
+ * Finds the daemon: OLYMPUS_DAEMON_ENTRY, then the bundle next to this file (plugin/dist/olympus-daemon.mjs,
+ * which is how an installed plugin ships it), then packages/daemon/dist/main.js walking up from this file
+ * (development in the repo).
  */
 export function findDaemonEntry(): string | null {
   if (process.env.OLYMPUS_DAEMON_ENTRY) return process.env.OLYMPUS_DAEMON_ENTRY;
   const here = path.dirname(fileURLToPath(import.meta.url));
+  const bundled = path.join(here, 'olympus-daemon.mjs');
+  if (existsSync(bundled)) return bundled;
   let dir = here;
   for (let i = 0; i < 6; i++) {
     const candidate = path.join(dir, 'packages/daemon/dist/main.js');
     if (existsSync(candidate)) return candidate;
     dir = path.dirname(dir);
-  }
-  try {
-    const saved = JSON.parse(readFileSync(path.join(here, 'daemon-entry.json'), 'utf8')) as { entry?: string };
-    if (saved.entry && existsSync(saved.entry)) return saved.entry;
-  } catch {
-    // No saved path.
   }
   return null;
 }

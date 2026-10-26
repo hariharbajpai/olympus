@@ -1,9 +1,9 @@
 {
-  "name": "olympus-local",
+  "name": "olympus",
   "owner": {
     "name": "Olympus"
   },
-  "description": "Local marketplace for developing the Olympus plugin",
+  "description": "Marketplace for the Olympus AI tech company plugin",
   "plugins": [
     {
       "name": "olympus",

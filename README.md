@@ -18,23 +18,21 @@ your own Claude Code session, on its login:
 3. Employees use company tools (`post_message`, `report_status`, `list_team`, `propose_team`) from the
    plugin's MCP server. The daemon checks every call and streams everything to the dashboard.
 
-## Set up
+## Install
+
+The plugin ships ready to run: `plugin/dist` holds the CLI, the MCP server, the daemon and the
+dashboard, so installing it needs no build step. In a terminal:
 
 ```bash
-npm install
-npm run build
-```
-
-Install the plugin in Claude Code (once). This marketplace is a local folder, so the plugin runs
-in place from this repo:
-
-```bash
-claude plugin marketplace add /Users/Coding/Tech_Company_Plugin
+claude plugin marketplace add hariharbajpai/olympus
 ```
 
 ```bash
-claude plugin install olympus@olympus-local
+claude plugin install olympus@olympus
 ```
+
+To try your local checkout instead, add the folder as the marketplace
+(`claude plugin marketplace add /path/to/this/repo`) and install the same way.
 
 Then start a new session in the Claude Code app and use:
 
@@ -55,7 +53,7 @@ dashboard's **Simulated** mode runs the same flow for free, with scripted employ
 | `packages/dashboard` | React + Vite live dashboard |
 | `packages/cli` | `olympus` CLI and daemon control |
 | `packages/mcp` | The plugin's `company` MCP server |
-| `plugin/` | The Claude Code plugin: agents, skills, `.mcp.json`, and bundles in `dist/` |
+| `plugin/` | The Claude Code plugin: agents, skills, `.mcp.json`, and the built bundles in `dist/` (committed) |
 | `docs/PRD.md` | Product requirements |
 
 Runtime data lives in `~/Olympus/.olympus/`: `owner-token`, `events.jsonl`, `daemon.log`, `daemon.pid`.
@@ -63,6 +61,8 @@ Runtime data lives in `~/Olympus/.olympus/`: `owner-token`, `events.jsonl`, `dae
 ## Development
 
 ```bash
+npm install
+npm run build                    # builds everything and refreshes plugin/dist
 npm test                         # company + host-loop tests (no model calls)
 npm run typecheck
 node scripts/smoke-mcp.mjs       # drives the plugin MCP server end to end (no model calls)
@@ -70,3 +70,6 @@ npm run validate:plugin
 OLYMPUS_ALLOWED_ORIGINS=http://localhost:5173 npm run dev:daemon   # terminal 1
 npm run dev:dashboard                                            # terminal 2: http://localhost:5173/?token=<owner-token>
 ```
+
+`plugin/dist` is committed on purpose, because an installed plugin has no build step. After changing
+the source, run `npm run build` and commit `plugin/dist` too.
