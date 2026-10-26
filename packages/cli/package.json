@@ -1,0 +1,10 @@
+{
+  "name": "@olympus/cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "olympus CLI and daemon control (bundled into the plugin by scripts/build-plugin.mjs)",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

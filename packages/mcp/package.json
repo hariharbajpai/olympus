@@ -1,0 +1,14 @@
+{
+  "name": "@olympus/mcp",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Olympus plugin MCP server: company tools for employees and the work loop for the Claude Code session",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  }
+}

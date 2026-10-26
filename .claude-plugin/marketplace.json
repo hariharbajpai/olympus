@@ -1,0 +1,14 @@
+{
+  "name": "olympus-local",
+  "owner": {
+    "name": "Olympus"
+  },
+  "description": "Local marketplace for developing the Olympus plugin",
+  "plugins": [
+    {
+      "name": "olympus",
+      "source": "./plugin",
+      "description": "Run an AI software company of Claude agents with a live dashboard and Owner approval gates."
+    }
+  ]
+}

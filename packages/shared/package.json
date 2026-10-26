@@ -1,0 +1,16 @@
+{
+  "name": "@olympus/shared",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Types shared by the Olympus daemon, dashboard and CLI (type-only package)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

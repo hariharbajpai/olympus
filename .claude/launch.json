@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "olympus-daemon",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["packages/daemon/dist/main.js"],
+      "port": 4800
+    }
+  ]
+}
