@@ -34,7 +34,7 @@ async function ownerCall<T>(apiPath: string, body?: unknown): Promise<T> {
 }
 
 const server = new McpServer(
-  { name: 'olympus-company', version: '0.1.0' },
+  { name: 'olympus-company', version: '0.2.0' },
   {
     instructions:
       'Olympus runs an AI software company inside this Claude Code session. The Owner starts work with /olympus:brief; the session then runs the work loop (next_work → Agent calls → activation_done). The Owner decides on the PRD with decide_prd and can hire, fire and message the CEO. The employee tools (post_message, report_status, list_team, get_project, list_tasks, create_task, update_task, submit_prd, propose_team, hire_team) belong to Olympus employee subagents and need their activation id.',
@@ -43,18 +43,48 @@ const server = new McpServer(
 
 // ───────────── Work loop (the Owner's session) ─────────────
 
+/** The folder this Claude Code session works in. Claude Code starts the plugin's MCP server there. */
+function sessionFolder(): string {
+  return process.env.CLAUDE_PROJECT_DIR || process.cwd();
+}
+
 server.registerTool(
   'start_project',
   {
     title: 'Start an Olympus project',
-    description: 'Start Olympus (if needed) and give the CEO a new product brief from the Owner. Starts a new project; the team stays. Returns the dashboard link. After this, run the work loop with next_work.',
-    inputSchema: { brief: z.string().min(5).max(4000).describe('What the Owner wants built, in their words') },
+    description:
+      'Start Olympus (if needed) and give the CEO a new brief from the Owner. The team works in this Claude Code session’s own project folder: if it already has code, they read it first and change it there, and no new project folder is made. Set new_folder only when the Owner asks for a separate, brand-new project. Returns where the team works and the dashboard link. After this, run the work loop with next_work.',
+    inputSchema: {
+      brief: z.string().min(5).max(4000).describe('What the Owner wants built or changed, in their words'),
+      new_folder: z
+        .boolean()
+        .optional()
+        .describe('true only when the Owner explicitly asks for a separate, brand-new project instead of working in this session’s folder'),
+    },
   },
-  ({ brief }) =>
+  ({ brief, new_folder }) =>
     guarded(async () => {
-      const res = await ownerCall<{ project: { title: string; workspaceDir: string } }>('/api/project/start', { brief });
+      const folder = new_folder ? null : sessionFolder();
+      const res = await ownerCall<{
+        project: { title: string; workspaceDir: string; ownerFolder?: boolean; existingCode?: boolean };
+        note?: string | null;
+      }>('/api/project/start', { brief, folder, fallbackToNew: true });
+      const p = res.project;
+      const where = p.existingCode
+        ? `The team works in this session’s project: ${p.workspaceDir}\nIt already has code, so they read it first and change it there. No new project folder was made.`
+        : p.ownerFolder
+          ? `The team works in this session’s folder: ${p.workspaceDir} (it is empty, so they build from scratch there).`
+          : `Code will be written in a new folder: ${p.workspaceDir}`;
       return text(
-        `Project “${res.project.title}” started. The CEO has the brief.\nCode will be written in: ${res.project.workspaceDir}\nDashboard (share the full link with the Owner): ${dashboardUrl()}\nNext: call next_work.`,
+        [
+          `Project “${p.title}” started. The CEO has the brief.`,
+          where,
+          res.note ?? '',
+          `Dashboard (share the full link with the Owner): ${dashboardUrl()}`,
+          'Next: call next_work.',
+        ]
+          .filter(Boolean)
+          .join('\n'),
       );
     }),
 );
@@ -125,6 +155,7 @@ server.registerTool(
       const done = s.tasks.filter((t) => t.status === 'done').length;
       const lines = [
         s.project ? `Project: ${s.project.title} · phase ${s.project.phase}` : 'No project yet.',
+        s.project ? `Folder: ${s.project.workspaceDir}${s.project.existingCode ? ' (existing codebase)' : ''}` : '',
         prd ? `PRD v${prd.version} “${prd.title}”: ${prd.status.replace('_', ' ')}` : 'No PRD yet.',
         `Tasks: ${done}/${s.tasks.length} done`,
         `Mode: ${s.settings.mode} · agent runs this project: ${s.activationsThisProject}/${s.settings.maxActivationsPerProject}`,

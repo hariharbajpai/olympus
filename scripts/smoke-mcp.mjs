@@ -3,7 +3,7 @@
 // any model calls: brief → PRD → approval → hiring → tasks → done.
 // Usage: node scripts/smoke-mcp.mjs   (starts the daemon if needed; resets the company first)
 // OLYMPUS_PLUGIN_DIR points at a copy of plugin/ to test it the way a GitHub install runs it.
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,10 +12,14 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pluginDir = process.env.OLYMPUS_PLUGIN_DIR ?? path.join(root, 'plugin');
+// The session's own folder holds an existing app, as when the Owner runs Olympus inside a project.
+const sessionDir = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'olympus-smoke-app-')));
+writeFileSync(path.join(sessionDir, 'package.json'), JSON.stringify({ name: 'smoke-app', scripts: { start: 'npx serve .' } }));
+writeFileSync(path.join(sessionDir, 'index.html'), '<h1>Smoke app</h1>');
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: [path.join(pluginDir, 'dist/olympus-mcp.mjs')],
-  env: Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined)),
+  env: { ...Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined)), CLAUDE_PROJECT_DIR: sessionDir },
 });
 const client = new Client({ name: 'olympus-smoke', version: '0.1.0' });
 await client.connect(transport);
@@ -58,11 +62,15 @@ await api('/api/company/reset', {});
 await api('/api/settings', { mode: 'claude-code' });
 check((await call('company_status')).includes('Aarav Kapoor'), 'company reset to the founding CEO and HR');
 
-console.log((await call('start_project', { brief: 'Build a tic tac toe web game for two players' })).split('\n')[0]);
+const started = await call('start_project', { brief: 'Build a tic tac toe web game for two players' });
+console.log(started.split('\n')[0]);
+check(started.includes(sessionDir) && started.includes('No new project folder'), 'start_project works in the session’s existing project folder');
 
 // CEO: PRD + staffing request.
 const ceo1 = await expectWork('olympus:ceo', 'the CEO gets the brief first (and only the CEO)');
 check(ceo1.prompt.includes('tic tac toe'), 'the CEO prompt carries the brief');
+check(ceo1.prompt.includes(`Existing codebase: this work changes the code already in ${sessionDir}`), 'the CEO is told it is an existing codebase');
+check((await call('get_project', as(ceo1))).includes('name "smoke-app"'), 'get_project carries the codebase overview');
 check((await raw('create_task', { ...as(ceo1), title: 'x', description: '', assignee: 'hr' })).isError, 'no tasks before the PRD is approved');
 await call('submit_prd', { ...as(ceo1), title: 'Tic tac toe', markdown: '# PRD\n\nTwo players on a 3x3 board, win and draw detection, a restart button and a scoreboard.' });
 await call('post_message', { ...as(ceo1), to: 'hr', text: 'Please propose a lean team: a Tech Lead and a full-stack engineer.' });

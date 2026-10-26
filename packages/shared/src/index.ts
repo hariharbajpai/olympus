@@ -79,6 +79,12 @@ export interface Project {
   phase: ProjectPhase;
   /** Folder where engineers write the product's code. */
   workspaceDir: string;
+  /** True when the folder is the Owner's own (the Claude Code session's), not a new one Olympus made. */
+  ownerFolder: boolean;
+  /** True when the folder already had code: the team changes that codebase instead of starting fresh. */
+  existingCode: boolean;
+  /** Overview of the existing codebase, scanned when the project started (null for a fresh folder). */
+  overview: string | null;
   startedAt: string;
   prd: PrdVersion[];
 }

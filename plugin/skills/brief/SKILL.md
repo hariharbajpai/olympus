@@ -1,7 +1,7 @@
 ---
 name: brief
-description: Give the Olympus CEO a product requirement (starts a new project) and let the AI company work on it in this Claude Code session. Use when the Owner wants Olympus to build something.
-argument-hint: <what to build>
+description: Give the Olympus CEO a requirement and let the AI company work on it in this Claude Code session. The team works in this session’s project folder: existing code is read first and changed there, no new project is made. Use when the Owner wants Olympus to build or change something.
+argument-hint: <what to build or change>
 allowed-tools: Agent, mcp__plugin_olympus_company__start_project, mcp__plugin_olympus_company__next_work, mcp__plugin_olympus_company__activation_done, mcp__plugin_olympus_company__company_status, mcp__plugin_olympus_company__owner_message, mcp__plugin_olympus_company__get_prd, mcp__plugin_olympus_company__decide_prd, mcp__plugin_olympus_company__owner_hire, mcp__plugin_olympus_company__owner_fire, mcp__plugin_olympus_company__post_message, mcp__plugin_olympus_company__report_status, mcp__plugin_olympus_company__list_team, mcp__plugin_olympus_company__get_project, mcp__plugin_olympus_company__list_tasks, mcp__plugin_olympus_company__create_task, mcp__plugin_olympus_company__update_task, mcp__plugin_olympus_company__submit_prd, mcp__plugin_olympus_company__propose_team, mcp__plugin_olympus_company__hire_team
 ---
 
@@ -11,10 +11,14 @@ The Owner's requirement:
 
 $ARGUMENTS
 
-1. If the requirement above is empty, ask the Owner what to build and stop.
-2. Call `start_project` with the requirement as `brief`. Give the Owner the full dashboard
-   link it returns, in one line.
-3. Run the work loop below.
+1. If the requirement above is empty, ask the Owner what to build or change and stop.
+2. Call `start_project` with the requirement as `brief`. The team works in this session's
+   own project folder: if it already has code, they get an overview of it and make the change
+   there, and no new project is created. Set `new_folder` to true only if the Owner clearly asks
+   for a separate, brand-new project instead.
+3. Tell the Owner in two short lines where the team will work (the folder in the result) and the
+   full dashboard link it returns.
+4. Run the work loop below.
 
 ## Run the work loop
 

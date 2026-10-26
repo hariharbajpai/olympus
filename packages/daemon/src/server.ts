@@ -13,6 +13,10 @@ export const DAEMON_VERSION = '0.0.1';
 
 const StartBody = z.object({
   brief: z.string().trim().min(5, 'Write a brief of at least 5 characters.').max(4000),
+  /** Work in this folder (absolute path) instead of a new one. The plugin sends the session's folder. */
+  folder: z.string().trim().max(1024).nullish(),
+  /** If the folder can't be used (home folder, missing), make a new one instead of failing. */
+  fallbackToNew: z.boolean().optional(),
 });
 
 const DecisionBody = z.object({
@@ -132,8 +136,11 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
   // Owner actions. The plugin's MCP server calls the same endpoints from Claude Code.
   app.post('/api/project/start', async (request, reply) => {
     const body = StartBody.parse(request.body ?? {});
-    const project = opts.company.startProject(body.brief);
-    return reply.code(202).send({ ok: true, project });
+    const { project, note } = opts.company.startProject(body.brief, {
+      folder: body.folder ?? null,
+      fallbackToNew: body.fallbackToNew ?? false,
+    });
+    return reply.code(202).send({ ok: true, project, note });
   });
 
   app.post('/api/project/prd/decision', async (request) => {

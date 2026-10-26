@@ -36780,25 +36780,38 @@ async function ownerCall(apiPath, body) {
   return daemonFetch(apiPath, body);
 }
 var server = new McpServer(
-  { name: "olympus-company", version: "0.1.0" },
+  { name: "olympus-company", version: "0.2.0" },
   {
     instructions: "Olympus runs an AI software company inside this Claude Code session. The Owner starts work with /olympus:brief; the session then runs the work loop (next_work \u2192 Agent calls \u2192 activation_done). The Owner decides on the PRD with decide_prd and can hire, fire and message the CEO. The employee tools (post_message, report_status, list_team, get_project, list_tasks, create_task, update_task, submit_prd, propose_team, hire_team) belong to Olympus employee subagents and need their activation id."
   }
 );
+function sessionFolder() {
+  return process.env.CLAUDE_PROJECT_DIR || process.cwd();
+}
 server.registerTool(
   "start_project",
   {
     title: "Start an Olympus project",
-    description: "Start Olympus (if needed) and give the CEO a new product brief from the Owner. Starts a new project; the team stays. Returns the dashboard link. After this, run the work loop with next_work.",
-    inputSchema: { brief: external_exports.string().min(5).max(4e3).describe("What the Owner wants built, in their words") }
+    description: "Start Olympus (if needed) and give the CEO a new brief from the Owner. The team works in this Claude Code session\u2019s own project folder: if it already has code, they read it first and change it there, and no new project folder is made. Set new_folder only when the Owner asks for a separate, brand-new project. Returns where the team works and the dashboard link. After this, run the work loop with next_work.",
+    inputSchema: {
+      brief: external_exports.string().min(5).max(4e3).describe("What the Owner wants built or changed, in their words"),
+      new_folder: external_exports.boolean().optional().describe("true only when the Owner explicitly asks for a separate, brand-new project instead of working in this session\u2019s folder")
+    }
   },
-  ({ brief }) => guarded(async () => {
-    const res = await ownerCall("/api/project/start", { brief });
+  ({ brief, new_folder }) => guarded(async () => {
+    const folder = new_folder ? null : sessionFolder();
+    const res = await ownerCall("/api/project/start", { brief, folder, fallbackToNew: true });
+    const p = res.project;
+    const where = p.existingCode ? `The team works in this session\u2019s project: ${p.workspaceDir}
+It already has code, so they read it first and change it there. No new project folder was made.` : p.ownerFolder ? `The team works in this session\u2019s folder: ${p.workspaceDir} (it is empty, so they build from scratch there).` : `Code will be written in a new folder: ${p.workspaceDir}`;
     return text(
-      `Project \u201C${res.project.title}\u201D started. The CEO has the brief.
-Code will be written in: ${res.project.workspaceDir}
-Dashboard (share the full link with the Owner): ${dashboardUrl()}
-Next: call next_work.`
+      [
+        `Project \u201C${p.title}\u201D started. The CEO has the brief.`,
+        where,
+        res.note ?? "",
+        `Dashboard (share the full link with the Owner): ${dashboardUrl()}`,
+        "Next: call next_work."
+      ].filter(Boolean).join("\n")
     );
   })
 );
@@ -36858,6 +36871,7 @@ server.registerTool(
     const done = s.tasks.filter((t) => t.status === "done").length;
     const lines = [
       s.project ? `Project: ${s.project.title} \xB7 phase ${s.project.phase}` : "No project yet.",
+      s.project ? `Folder: ${s.project.workspaceDir}${s.project.existingCode ? " (existing codebase)" : ""}` : "",
       prd ? `PRD v${prd.version} \u201C${prd.title}\u201D: ${prd.status.replace("_", " ")}` : "No PRD yet.",
       `Tasks: ${done}/${s.tasks.length} done`,
       `Mode: ${s.settings.mode} \xB7 agent runs this project: ${s.activationsThisProject}/${s.settings.maxActivationsPerProject}`,

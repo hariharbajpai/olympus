@@ -31,6 +31,10 @@ async function main(): Promise<void> {
   const company = new Company({
     companyName: config.companyName,
     projectsDir: config.projectsDir,
+    reservedDirs: [
+      { dir: config.workspaceDir, withSubfolders: false },
+      { dir: config.stateDir, withSubfolders: true },
+    ],
     settings: config.settings,
     bus,
     runtimes: { host: new HostRuntime(config.hostClaimTimeoutMs), simulated: new SimulatedRuntime() },

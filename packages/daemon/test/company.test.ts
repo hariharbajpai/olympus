@@ -1,9 +1,11 @@
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { CompanyEvent, CompanyEventType, HostClaimResponse, Settings } from '@olympus/shared';
 import { Company, CompanyError, type CompanyOptions, type SavedCompany } from '../src/company.js';
 import { EventBus } from '../src/events.js';
+import { activationPrompt } from '../src/prompts.js';
 import { HostRuntime } from '../src/runtime/host.js';
 import { SimulatedRuntime } from '../src/runtime/simulated.js';
 import type { ActivationRequest, ActivationResult, AgentRuntime } from '../src/runtime/types.js';
@@ -249,5 +251,113 @@ describe('persistence', () => {
     // The CEO's unread brief survives and becomes work again.
     await tick();
     expect(work(second.company.hostClaim())[0]?.agent).toBe('olympus:ceo');
+  });
+});
+
+describe('working in the Owner’s own project folder', () => {
+  const tempFolder = (name: string) => realpathSync(mkdtempSync(path.join(os.tmpdir(), `olympus-${name}-`)));
+  const newFolders = () => (existsSync(projectsDir) ? readdirSync(projectsDir).length : 0);
+
+  function existingApp(): string {
+    const dir = tempFolder('existing');
+    const write = (rel: string, body: string) => {
+      mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+      writeFileSync(path.join(dir, rel), body);
+    };
+    write('package.json', JSON.stringify({ name: 'shop-api', scripts: { test: 'vitest' }, dependencies: { fastify: '5' } }));
+    write('README.md', '# Shop API\nSells things online.');
+    write('CLAUDE.md', 'Use pnpm, never npm.');
+    write('src/server.ts', 'export {};');
+    write('src/routes/cart.ts', 'export {};');
+    write('node_modules/lib/index.js', 'module.exports = {};');
+    write('.git/HEAD', 'ref: refs/heads/feature-x\n');
+    return dir;
+  }
+
+  it('changes the existing code there, with an overview, and makes no new folder', async () => {
+    const { company } = setup({ mode: 'claude-code' });
+    const dir = existingApp();
+    const before = newFolders();
+    const { project, note } = company.startProject('Add discount codes to the cart', { folder: dir });
+
+    expect(project).toMatchObject({ workspaceDir: dir, ownerFolder: true, existingCode: true });
+    expect(note).toBeNull();
+    expect(newFolders()).toBe(before);
+    expect(project.overview).toContain('TypeScript (2 files)');
+    expect(project.overview).not.toContain('JavaScript'); // node_modules is skipped
+    expect(project.overview).toContain('name "shop-api"');
+    expect(project.overview).toContain('branch feature-x');
+    expect(project.overview).toContain('Use pnpm, never npm.');
+    expect(project.overview).toContain('# Shop API');
+
+    await tick();
+    const [ceo] = work(company.hostClaim());
+    expect(ceo?.prompt).toContain(`Existing codebase: this work changes the code already in ${dir}`);
+    const info = company.hostTool(ceo!.activation_id, 'get_project', {});
+    expect(info.text).toContain('existing codebase');
+    expect(info.text).toContain('## Codebase overview');
+    expect(info.text).toContain('Use pnpm, never npm.');
+  });
+
+  it('tells builders to keep changes focused and leave git to the Owner', () => {
+    const { company } = setup();
+    const { project } = company.startProject('Add discount codes', { folder: existingApp() });
+    const prompt = (isBuilder: boolean) =>
+      activationPrompt({ companyName: 'TestCo', name: 'Dev', title: 'Engineer', employeeId: 'dev', activationId: 'a1', roster: '', project, isBuilder, myTasks: [], inbox: [] });
+    expect(prompt(true)).toContain('Don’t commit, switch branches');
+    expect(prompt(false)).not.toContain('Don’t commit');
+    expect(prompt(false)).toContain('Existing codebase');
+  });
+
+  it('builds from scratch in an empty Owner folder', () => {
+    const { company } = setup();
+    const dir = tempFolder('empty');
+    const { project } = company.startProject('Build a habit tracker', { folder: dir });
+    expect(project).toMatchObject({ workspaceDir: dir, ownerFolder: true, existingCode: false, overview: null });
+  });
+
+  it('notes earlier Olympus work when a new brief lands in the same folder', () => {
+    const { company } = setup();
+    const dir = existingApp();
+    company.startProject('Add discount codes', { folder: dir });
+    const { project } = company.startProject('Add gift cards', { folder: dir });
+    expect(project.overview).toContain('Earlier Olympus work in this folder: “Add discount codes”');
+  });
+
+  it('never uses the home folder, the root or Olympus’s own folders', () => {
+    const { company } = setup();
+    company.startProject('Build a todo app');
+    const bad = [os.homedir(), path.dirname(os.homedir()), '/', projectsDir, path.join(os.tmpdir(), 'olympus-no-such-folder'), 'relative/path'];
+    mkdirSync(projectsDir, { recursive: true });
+    for (const folder of bad) {
+      expect(() => company.startProject('Add a feature', { folder }), folder).toThrow(CompanyError);
+    }
+    expect(company.snapshot().project?.title).toBe('Todo app'); // the running project is untouched
+
+    const fallback = company.startProject('Add a feature', { folder: os.homedir(), fallbackToNew: true });
+    expect(fallback.project.ownerFolder).toBe(false);
+    expect(fallback.project.workspaceDir.startsWith(projectsDir)).toBe(true);
+    expect(fallback.note).toContain('home folder');
+
+    // A folder Olympus made for an earlier project is a fine place to keep working.
+    const old = path.join(projectsDir, 'old-app-abc123');
+    mkdirSync(old, { recursive: true });
+    writeFileSync(path.join(old, 'index.html'), '<h1>Old app</h1>');
+    expect(company.startProject('Add a footer', { folder: old }).project).toMatchObject({ ownerFolder: true, existingCode: true });
+  });
+
+  it('restores projects saved before this feature as new-folder projects', () => {
+    let saved: SavedCompany | null = null;
+    const persist = { load: () => saved, save: (s: SavedCompany) => (saved = structuredClone(s)) };
+    const first = setup({ persist });
+    first.company.startProject('Build a URL shortener');
+    first.company.shutdown();
+    const old = saved!.project as unknown as Record<string, unknown>;
+    delete old.ownerFolder;
+    delete old.existingCode;
+    delete old.overview;
+
+    const project = setup({ persist }).company.snapshot().project;
+    expect(project).toMatchObject({ ownerFolder: false, existingCode: false, overview: null });
   });
 });

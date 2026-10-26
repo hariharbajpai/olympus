@@ -33,6 +33,7 @@ import {
 import { CHANNELS, FOUNDING_TEAM, OWNER_ID, activationPrompt, agentTypeFor } from './prompts.js';
 import type { HostRuntime } from './runtime/host.js';
 import type { ActivationResult, AgentRuntime, CompanyTools, InboxItem, InboxKind, ToolResult } from './runtime/types.js';
+import { type ReservedDir, checkProjectFolder, scanCodebase } from './workspace.js';
 
 const MAX_MESSAGES = 1000;
 const MAX_METRIC_POINTS = 5000;
@@ -72,8 +73,10 @@ export interface SavedCompany {
 
 export interface CompanyOptions {
   companyName: string;
-  /** Root folder for project workspaces (each project gets a sub-folder). */
+  /** Root folder for new project workspaces (each new project gets a sub-folder). */
   projectsDir: string;
+  /** Olympus's own folders, which can never be a project folder. projectsDir is always included. */
+  reservedDirs?: ReservedDir[];
   settings: Settings;
   bus: EventBus;
   runtimes: { host: HostRuntime | null; simulated: AgentRuntime };
@@ -144,10 +147,35 @@ export class Company {
 
   // ───────────────────────────── Owner actions ─────────────────────────────
 
-  /** Starts a new project: the CEO gets the brief. The team stays; tasks and proposals start fresh. */
-  startProject(brief: string): Project {
+  /**
+   * Starts a new project: the CEO gets the brief. The team stays; tasks and proposals start fresh.
+   * With `folder` (the Owner's Claude Code session folder) the team works in that folder, and if it
+   * already has code they get an overview of it and change it there. Without it, or when the folder
+   * can't be used and `fallbackToNew` is set, Olympus makes a new folder under projectsDir.
+   */
+  startProject(brief: string, options: { folder?: string | null; fallbackToNew?: boolean } = {}): { project: Project; note: string | null } {
     const ceo = this.activeInRole('ceo');
     if (!ceo) throw new CompanyError(409, 'There is no CEO. Hire a CEO first (Org chart → Hire, or /olympus:hire ceo).');
+
+    // Settle the folder before touching any state, so a bad folder leaves the current project as it is.
+    let ownerDir: string | null = null;
+    let note: string | null = null;
+    if (options.folder) {
+      const check = checkProjectFolder(options.folder, [
+        { dir: this.opts.projectsDir, withSubfolders: false },
+        ...(this.opts.reservedDirs ?? []),
+      ]);
+      if (check.ok) ownerDir = check.dir;
+      else if (options.fallbackToNew) note = `Didn't use ${options.folder}: ${check.reason} Made a new folder instead.`;
+      else throw new CompanyError(400, check.reason);
+    }
+    const scan = ownerDir ? scanCodebase(ownerDir) : null;
+    const previous = this.project;
+    const earlier =
+      previous && ownerDir && previous.workspaceDir === ownerDir
+        ? `Earlier Olympus work in this folder: “${previous.title}” (${this.tasks.filter((t) => t.status === 'done').length}/${this.tasks.length} tasks done). Its PRD and tasks are closed; this brief is new work on the same code.`
+        : null;
+
     this.generation++;
     for (const member of this.members.values()) {
       member.controller?.abort();
@@ -158,9 +186,22 @@ export class Company {
     }
     const id = randomBytes(3).toString('hex');
     const title = titleFromBrief(brief);
-    const workspaceDir = path.join(this.opts.projectsDir, `${slugify(title)}-${id}`);
-    mkdirSync(workspaceDir, { recursive: true });
-    this.project = { id, title, brief, phase: 'planning', workspaceDir, startedAt: now(), prd: [] };
+    const workspaceDir = ownerDir ?? path.join(this.opts.projectsDir, `${slugify(title)}-${id}`);
+    if (!ownerDir) mkdirSync(workspaceDir, { recursive: true });
+    const existingCode = scan?.hasFiles ?? false;
+    const overview = existingCode && scan ? [scan.overview, earlier].filter(Boolean).join('\n\n') : null;
+    this.project = {
+      id,
+      title,
+      brief,
+      phase: 'planning',
+      workspaceDir,
+      ownerFolder: ownerDir !== null,
+      existingCode,
+      overview,
+      startedAt: now(),
+      prd: [],
+    };
     this.tasks = [];
     this.proposals = [];
     this.metrics = emptyMetrics();
@@ -169,10 +210,16 @@ export class Company {
     this.limitNoticed.clear();
     this.nextTaskId = 1;
     this.opts.bus.emit({ type: 'project.started', projectId: id, title });
-    this.post('system', '#general', `New project: “${title}”. The CEO has the Owner’s brief.`);
+    this.post(
+      'system',
+      '#general',
+      existingCode
+        ? `New work on the existing codebase in ${workspaceDir}: “${title}”. The CEO has the Owner’s brief.`
+        : `New project: “${title}”. The CEO has the Owner’s brief.`,
+    );
     this.deliver(OWNER_ID, ceo.data.id, brief, 'brief');
     this.changed();
-    return structuredClone(this.project);
+    return { project: structuredClone(this.project), note };
   }
 
   /** The Owner talks to the CEO (dashboard or /olympus:tell). */
@@ -430,9 +477,15 @@ export class Company {
         const prdText = shown
           ? `PRD v${shown.version} “${shown.title}” (${shown.status.replace('_', ' ')})${shown.ownerComment ? `\nOwner’s note: ${shown.ownerComment}` : ''}\n\n${shown.markdown}`
           : 'No PRD yet.';
+        const folder = p.existingCode
+          ? `${p.workspaceDir} (existing codebase: change the code that is there; never start a new project or a second copy inside it)`
+          : p.workspaceDir;
+        const overview = p.existingCode && p.overview
+          ? `\n\n## Codebase overview (scanned when this work started; read the files themselves for detail)\n${p.overview}`
+          : '';
         return {
           ok: true,
-          text: `Project: ${p.title}\nBrief: ${p.brief}\nPhase: ${p.phase}\nProject folder: ${p.workspaceDir}\nTasks: ${this.taskSummary()}\n\n${prdText}`,
+          text: `Project: ${p.title}\nBrief: ${p.brief}\nPhase: ${p.phase}\nProject folder: ${folder}\nTasks: ${this.taskSummary()}\n\n${prdText}${overview}`,
         };
       }
 
@@ -1013,7 +1066,11 @@ export class Company {
     }
     this.messages = saved.messages;
     this.proposals = saved.proposals;
-    this.project = saved.project;
+    // Projects saved before the Owner's-folder feature have no folder fields: they used a new folder.
+    const p = saved.project;
+    this.project = p
+      ? { ...p, ownerFolder: p.ownerFolder ?? false, existingCode: p.existingCode ?? false, overview: p.overview ?? null }
+      : null;
     this.tasks = saved.tasks;
     this.settings = { ...this.settings, ...saved.settings };
     this.metrics = saved.metrics ?? emptyMetrics();

@@ -43,11 +43,23 @@ function projectSection(project: Project | null, isBuilder: boolean, myTasks: Ta
     `Phase: ${PHASE_LABEL[project.phase]}`,
     prd,
   ];
+  if (project.existingCode) {
+    lines.push(
+      `Existing codebase: this work changes the code already in ${project.workspaceDir}. No new project is made.`,
+      'Read the codebase overview in get_project before you plan or write anything, and keep the project’s own stack, structure and conventions.',
+    );
+  }
   if (isBuilder) {
     lines.push(
       `Project folder: ${project.workspaceDir}`,
       'Create and edit files only inside that folder (use absolute paths). Never touch files anywhere else.',
     );
+    if (project.existingCode) {
+      lines.push(
+        'It is the Owner’s working copy: read the files around your task before you edit them, and keep each change focused. Don’t reformat, move, rename or delete code your task doesn’t need, and don’t scaffold a new app inside it.',
+        'Don’t commit, switch branches, stash or reset in git: the Owner reviews and commits the changes. Use the project’s own scripts to build and test.',
+      );
+    }
   }
   if (myTasks.length > 0) {
     lines.push(

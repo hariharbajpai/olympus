@@ -60,8 +60,16 @@ export function Project() {
           <Card title="The brief">
             <p className="brief-text">{project.brief}</p>
             <p className="muted small folder">
-              <Folder size={14} /> Code goes in <code>{project.workspaceDir}</code>
+              <Folder size={14} />
+              {project.existingCode ? 'Changing your existing code in' : project.ownerFolder ? 'Building in your folder' : 'Code goes in'}{' '}
+              <code>{project.workspaceDir}</code>
             </p>
+            {project.existingCode && project.overview && (
+              <details className="overview">
+                <summary className="muted small">Codebase overview the team works from</summary>
+                <pre>{project.overview}</pre>
+              </details>
+            )}
           </Card>
           <Card title="Staffing" subtitle={state.proposals.length ? 'Proposed by HR, hired after approval' : 'Current team'}>
             <ul className="people-list">

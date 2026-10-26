@@ -1,7 +1,7 @@
 {
   "name": "olympus",
   "displayName": "Olympus: AI Tech Company",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Run an AI software company of Claude agents (CEO, HR, and later CTO, engineers, QA, DevOps) with a live dashboard and Owner approval gates. Phase 1: PRD approval, hiring, tasks and a live dashboard.",
   "author": {
     "name": "Olympus"

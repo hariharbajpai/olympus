@@ -19,18 +19,34 @@ No API key. Employees are **Claude Code subagents** (`olympus:ceo`, `olympus:hr`
    task starts before you approve: the daemon enforces it.
 3. **Build.** HR hires the proposed team; their cards appear on the org chart under their managers. The
    Tech Lead breaks the PRD into tasks, and hears about every finished or blocked task until the board
-   is done. Engineers write the code in `~/Olympus/projects/<project>/`.
+   is done. Engineers write the code in your session's project folder (see below).
 4. Work moves while `/olympus:brief`, `/olympus:run` or another `/olympus` command runs the work loop in
    your session. A run is capped at 60 agent runs (12 per person); change it in Settings.
 
 The dashboard's **Simulated** mode (Settings) runs the same flow for free, with scripted employees.
+
+### Working in your existing project
+
+Olympus works in the folder of the Claude Code session you brief it from. Open a chat in a project
+you already have, run `/olympus:brief <what to change>`, and the team works in that project. No new
+project is made. Olympus scans the code first (languages, layout, build files, README, and your
+`CLAUDE.md` or `AGENTS.md`) and gives every employee that overview. The CEO writes the PRD as a change
+to your product, HR staffs for your stack, and engineers read the code around each task, keep its
+conventions, and leave git commits to you. The dashboard's Project page shows the folder and the
+overview.
+
+- An empty folder: the team builds from scratch there.
+- Your home folder, the filesystem root, or no folder: Olympus makes a new one in `~/Olympus/projects/`.
+- Want a separate new project from inside an existing one? Say so in the brief ("as a new project"),
+  and Claude Code asks Olympus for a new folder.
+- Briefs from the dashboard always get a new folder.
 
 ## Commands
 
 | Command | What it does |
 | --- | --- |
 | `/olympus:start` | Start the company and open the dashboard |
-| `/olympus:brief <what to build>` | New project: the CEO gets the brief, then the team works |
+| `/olympus:brief <what to build or change>` | The CEO gets the brief, then the team works in this session's project folder |
 | `/olympus:prd` | Show the PRD waiting for you |
 | `/olympus:approve [note]` · `/olympus:changes <what>` | Decide on the PRD, then the team works |
 | `/olympus:tell <message>` | Message the CEO, then the team works |
@@ -79,7 +95,7 @@ dashboard's **Simulated** mode runs the same flow for free, with scripted employ
 | `plugin/` | The Claude Code plugin: agents, skills, `.mcp.json`, and the built bundles in `dist/` (committed) |
 | `docs/PRD.md` | Product requirements |
 
-Runtime data lives in `~/Olympus/.olympus/` (`company.json` keeps the company across restarts, plus `owner-token`, `events.jsonl`, `daemon.log`). Project code goes in `~/Olympus/projects/`.
+Runtime data lives in `~/Olympus/.olympus/` (`company.json` keeps the company across restarts, plus `owner-token`, `events.jsonl`, `daemon.log`). Projects briefed from a session work in that session's folder; the rest go in `~/Olympus/projects/`.
 
 ## Development
 
