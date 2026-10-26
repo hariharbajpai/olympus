@@ -16,6 +16,7 @@
 > - **26 Oct 2026 · Org chart shows the whole company:** hired employees, hires HR has proposed, and open roles, with reporting lines.
 > - **26 Oct 2026 · D2–D8:** recommendations accepted.
 > - **26 Oct 2026 · Name decided: Olympus** (D7). Commands are `/olympus:*`, agents are `olympus:ceo`, `olympus:hr`, …, the workspace is `~/Olympus`.
+> - **26 Oct 2026 · Phase 1 core built:** projects with a PRD the Owner approves or sends back (dashboard or `/olympus:approve`, `/olympus:changes`); the company starts with only the CEO and HR; the Owner hires and fires anyone, including the CEO and HR; HR hires the proposed team only after approval, and only hired people appear on the org chart, by reporting line; the Tech Lead (else CTO, else CEO) creates tasks and is told about every finished, blocked or review task; 16 role agents; a sidebar dashboard with an overview, charts, org chart, PRD review, task board, messages, activity and settings; state saved in `company.json`. A message from someone mid-turn waits until their turn ends, so recipients get everything in one run.
 
 ---
 

@@ -37,3 +37,32 @@ export function roleById(id: string): OrgRole | undefined {
 export function modelFor(role: OrgRole, level: Level): string {
   return level === 'mts' ? OPUS : role.defaultModel;
 }
+
+/** Who monitors the work: the first of these roles that has someone in it. */
+export const WORK_LEAD_ROLES = ['tech-lead', 'cto', 'ceo'];
+
+/** Roles that may create tasks and update anyone's task. */
+export const TASK_LEAD_ROLES = new Set(['ceo', 'cto', 'tech-lead', 'architect']);
+
+/** Roles whose people build things in the project folder (they get code tools). */
+export const BUILDER_ROLES = new Set([
+  'architect',
+  'frontend',
+  'backend-node',
+  'backend-python',
+  'fullstack',
+  'database',
+  'data-ml',
+  'qa',
+  'devops',
+  'security',
+  'designer',
+  'writer',
+]);
+
+/** Names for hires the Owner makes without naming them. */
+export const PERSONA_NAMES = [
+  'Aarav Kapoor', 'Meera Iyer', 'Arjun Mehta', 'Sana Qureshi', 'Priya Nair', 'Rahul Verma',
+  'Kabir Shah', 'Neha Joshi', 'Vikram Rao', 'Ananya Das', 'Rohan Gupta', 'Isha Menon',
+  'Dev Malhotra', 'Tara Sen', 'Kunal Bose', 'Aisha Khan', 'Nikhil Jain', 'Zara Ali',
+];

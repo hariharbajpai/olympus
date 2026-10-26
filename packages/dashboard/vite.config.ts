@@ -17,5 +17,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // Served from the Owner's own machine; one bundle with charts and Markdown is fine.
+    chunkSizeWarningLimit: 1200,
   },
 });

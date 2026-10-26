@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { CompanyEvent, CompanyState, ServerFrame } from '@olympus/shared';
 
 const TOKEN_KEY = 'olympus-owner-token';
-const MAX_EVENTS = 400;
+const MAX_EVENTS = 800;
 
 /** Reads the owner token from ?token= once, keeps it for this tab, and removes it from the URL. */
 export function readToken(): string | null {
@@ -68,11 +68,7 @@ export function useCompany(token: string) {
         if (frame.kind === 'hello') {
           setEvents(frame.recentEvents.slice(-MAX_EVENTS));
         } else {
-          setEvents((prev) => {
-            const next = prev.length >= MAX_EVENTS ? prev.slice(-MAX_EVENTS + 1) : prev.slice();
-            next.push(frame.event);
-            return next;
-          });
+          setEvents((prev) => [...prev, ...frame.events].slice(-MAX_EVENTS));
         }
       };
       socket.onclose = async () => {

@@ -5,15 +5,36 @@ import fastifyStatic from '@fastify/static';
 import fastifyWebsocket from '@fastify/websocket';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { HealthResponse, ServerFrame } from '@olympus/shared';
+import type { CompanyEvent, HealthResponse, ServerFrame } from '@olympus/shared';
 import { type Company, CompanyError } from './company.js';
 import type { EventBus } from './events.js';
 
 export const DAEMON_VERSION = '0.0.1';
 
 const StartBody = z.object({
-  brief: z.string().trim().min(5, 'Write a brief of at least 5 characters.').max(2000),
-  mode: z.enum(['claude-code', 'simulated']),
+  brief: z.string().trim().min(5, 'Write a brief of at least 5 characters.').max(4000),
+});
+
+const DecisionBody = z.object({
+  decision: z.enum(['approve', 'changes']),
+  comment: z.string().trim().max(4000).nullish(),
+});
+
+const OwnerMessageBody = z.object({
+  text: z.string().trim().min(1, 'Write a message.').max(4000),
+});
+
+const HireBody = z.object({
+  roleId: z.string().min(1).max(40),
+  name: z.string().trim().max(60).nullish(),
+  level: z.enum(['sde1', 'sde2', 'senior', 'mts']).nullish(),
+});
+
+const SettingsBody = z.object({
+  mode: z.enum(['claude-code', 'simulated']).optional(),
+  maxConcurrency: z.number().int().optional(),
+  maxActivationsPerEmployee: z.number().int().optional(),
+  maxActivationsPerProject: z.number().int().optional(),
 });
 
 const FireBody = z.object({
@@ -27,7 +48,18 @@ const DoneBody = z.object({
 
 const AgentToolBody = z.object({
   activation: z.string().min(1).max(64),
-  tool: z.enum(['post_message', 'report_status', 'list_team', 'propose_team']),
+  tool: z.enum([
+    'post_message',
+    'report_status',
+    'list_team',
+    'get_project',
+    'list_tasks',
+    'create_task',
+    'update_task',
+    'submit_prd',
+    'propose_team',
+    'hire_team',
+  ]),
   input: z.record(z.string(), z.unknown()).default({}),
 });
 
@@ -49,7 +81,7 @@ function tokenMatches(expected: string, given: unknown): boolean {
 }
 
 export async function buildServer(opts: ServerOptions): Promise<FastifyInstance> {
-  const app = Fastify({ logger: false, bodyLimit: 64 * 1024 });
+  const app = Fastify({ logger: false, bodyLimit: 256 * 1024 });
   const startedAt = new Date().toISOString();
 
   await app.register(fastifyWebsocket);
@@ -97,13 +129,38 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
 
   app.get('/api/state', async () => opts.company.snapshot());
 
-  app.post('/api/demo/start', async (request, reply) => {
+  // Owner actions. The plugin's MCP server calls the same endpoints from Claude Code.
+  app.post('/api/project/start', async (request, reply) => {
     const body = StartBody.parse(request.body ?? {});
-    opts.company.startDemo(body.brief, body.mode);
-    return reply.code(202).send({ ok: true });
+    const project = opts.company.startProject(body.brief);
+    return reply.code(202).send({ ok: true, project });
   });
 
-  app.post('/api/demo/reset', async () => {
+  app.post('/api/project/prd/decision', async (request) => {
+    const body = DecisionBody.parse(request.body ?? {});
+    opts.company.decidePrd(body.decision, body.comment ?? null);
+    return { ok: true };
+  });
+
+  app.post('/api/owner/message', async (request) => {
+    const body = OwnerMessageBody.parse(request.body ?? {});
+    opts.company.ownerMessage(body.text);
+    return { ok: true };
+  });
+
+  app.post('/api/employees/hire', async (request) => {
+    const body = HireBody.parse(request.body ?? {});
+    const employee = opts.company.ownerHire(body.roleId, body.name ?? null, body.level ?? null);
+    return { ok: true, employee };
+  });
+
+  app.post('/api/settings', async (request) => {
+    const body = SettingsBody.parse(request.body ?? {});
+    const patch = Object.fromEntries(Object.entries(body).filter(([, v]) => v !== undefined));
+    return { ok: true, settings: opts.company.updateSettings(patch) };
+  });
+
+  app.post('/api/company/reset', async () => {
     opts.company.reset();
     return { ok: true };
   });
@@ -136,16 +193,31 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     return { ok: true };
   });
 
+  // Events go out in small batches (every 100 ms) with one fresh snapshot, so a burst of events
+  // doesn't send the whole state dozens of times.
   app.get('/ws', { websocket: true }, (socket) => {
     const send = (frame: ServerFrame) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(frame));
     };
-    send({ kind: 'hello', state: opts.company.snapshot(), recentEvents: opts.bus.recent(300) });
+    send({ kind: 'hello', state: opts.company.snapshot(), recentEvents: opts.bus.recent(400) });
+    let pending: CompanyEvent[] = [];
+    let timer: NodeJS.Timeout | null = null;
+    const flush = () => {
+      timer = null;
+      const events = pending;
+      pending = [];
+      if (events.length > 0) send({ kind: 'events', events, state: opts.company.snapshot() });
+    };
     const unsubscribe = opts.bus.subscribe((event) => {
-      send({ kind: 'event', event, state: opts.company.snapshot() });
+      pending.push(event);
+      timer ??= setTimeout(flush, 100);
     });
-    socket.on('close', unsubscribe);
-    socket.on('error', unsubscribe);
+    const stop = () => {
+      unsubscribe();
+      if (timer) clearTimeout(timer);
+    };
+    socket.on('close', stop);
+    socket.on('error', stop);
   });
 
   const indexFile = path.join(opts.dashboardDir, 'index.html');

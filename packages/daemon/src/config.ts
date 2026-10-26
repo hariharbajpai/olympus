@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Effort } from '@olympus/shared';
+import type { Settings } from '@olympus/shared';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,15 +46,14 @@ export interface DaemonConfig {
   port: number;
   workspaceDir: string;
   stateDir: string;
+  /** Each project gets a folder here for the code its engineers write. */
+  projectsDir: string;
   dashboardDir: string;
   allowedOrigins: string[];
-  maxConcurrency: number;
-  maxActivationsPerEmployee: number;
-  maxActivationsPerRun: number;
+  /** Defaults for a new company. Saved settings (changed on the dashboard) win. */
+  settings: Settings;
   /** How long a Claude Code session may hold an activation before it's given back. */
   hostClaimTimeoutMs: number;
-  /** Shown on the dashboard. The real model comes from each plugin agent's frontmatter. */
-  models: Record<'ceo' | 'hr', { model: string; effort: Effort }>;
 }
 
 export function readConfig(): DaemonConfig {
@@ -71,16 +70,16 @@ export function readConfig(): DaemonConfig {
     port,
     workspaceDir,
     stateDir: path.join(workspaceDir, '.olympus'),
+    projectsDir: path.join(workspaceDir, 'projects'),
     dashboardDir: process.env.OLYMPUS_DASHBOARD_DIR ?? defaultDashboardDir(),
     allowedOrigins: [`http://127.0.0.1:${port}`, `http://localhost:${port}`, ...extraOrigins],
-    maxConcurrency: numberFromEnv('OLYMPUS_MAX_CONCURRENCY', 4),
-    // Phase 0 keeps runs short so they don't eat into the Owner's Claude plan.
-    maxActivationsPerEmployee: numberFromEnv('OLYMPUS_MAX_ACTIVATIONS', 3),
-    maxActivationsPerRun: numberFromEnv('OLYMPUS_MAX_RUN_ACTIVATIONS', 8),
-    hostClaimTimeoutMs: numberFromEnv('OLYMPUS_HOST_TIMEOUT_MIN', 20) * 60_000,
-    models: {
-      ceo: { model: 'claude-opus-5-5', effort: 'medium' },
-      hr: { model: 'claude-sonnet-5-5', effort: 'low' },
+    settings: {
+      mode: process.env.OLYMPUS_MODE === 'simulated' ? 'simulated' : 'claude-code',
+      maxConcurrency: numberFromEnv('OLYMPUS_MAX_CONCURRENCY', 4),
+      // Limits keep a project from eating the Owner's Claude plan; raise them in Settings.
+      maxActivationsPerEmployee: numberFromEnv('OLYMPUS_MAX_ACTIVATIONS', 12),
+      maxActivationsPerProject: numberFromEnv('OLYMPUS_MAX_PROJECT_ACTIVATIONS', 60),
     },
+    hostClaimTimeoutMs: numberFromEnv('OLYMPUS_HOST_TIMEOUT_MIN', 20) * 60_000,
   };
 }

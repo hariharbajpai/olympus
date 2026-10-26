@@ -3224,11 +3224,11 @@ var require_Mime = __commonJS({
         }
       }
     };
-    Mime.prototype.getType = function(path4) {
-      path4 = String(path4);
-      let last = path4.replace(/^.*[/\\]/, "").toLowerCase();
+    Mime.prototype.getType = function(path5) {
+      path5 = String(path5);
+      let last = path5.replace(/^.*[/\\]/, "").toLowerCase();
       let ext = last.replace(/^.*\./, "").toLowerCase();
-      let hasPath = last.length < path4.length;
+      let hasPath = last.length < path5.length;
       let hasDot = ext.length < last.length - 1;
       return (hasDot || !hasPath) && this._types[ext] || null;
     };
@@ -4714,7 +4714,7 @@ var require_send = __commonJS({
   "node_modules/@fastify/send/lib/send.js"(exports, module) {
     "use strict";
     var fs = __require("node:fs");
-    var path4 = __require("node:path");
+    var path5 = __require("node:path");
     var stream = __require("node:stream");
     var debug = __require("node:util").debuglog("send");
     var decode4 = require_fast_decode_uri_component();
@@ -4730,11 +4730,11 @@ var require_send = __commonJS({
     var { parseBytesRange } = require_parseBytesRange();
     var { parseTokenList } = require_parseTokenList();
     var { createHttpError } = require_createHttpError();
-    var extname = path4.extname;
-    var join = path4.join;
-    var normalize = path4.normalize;
-    var resolve = path4.resolve;
-    var sep = path4.sep;
+    var extname = path5.extname;
+    var join = path5.join;
+    var normalize = path5.normalize;
+    var resolve = path5.resolve;
+    var sep = path5.sep;
     var Readable = stream.Readable;
     var BYTES_RANGE_REGEXP = /^ *bytes=/;
     var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1e3;
@@ -4809,36 +4809,36 @@ var require_send = __commonJS({
       };
     }
     function normalizePath(_path, root) {
-      let path5 = decode4(_path);
-      if (path5 == null) {
+      let path6 = decode4(_path);
+      if (path6 == null) {
         return { statusCode: 400 };
       }
-      if (~path5.indexOf("\0")) {
+      if (~path6.indexOf("\0")) {
         return { statusCode: 400 };
       }
       let parts;
       if (root !== null) {
-        if (path5) {
-          path5 = normalize("." + sep + path5);
+        if (path6) {
+          path6 = normalize("." + sep + path6);
         }
-        if (UP_PATH_REGEXP.test(path5)) {
-          debug('malicious path "%s"', path5);
+        if (UP_PATH_REGEXP.test(path6)) {
+          debug('malicious path "%s"', path6);
           return { statusCode: 403 };
         }
-        parts = path5.split(sep);
-        path5 = normalize(join(root, path5));
+        parts = path6.split(sep);
+        path6 = normalize(join(root, path6));
       } else {
-        if (UP_PATH_REGEXP.test(path5)) {
-          debug('malicious path "%s"', path5);
+        if (UP_PATH_REGEXP.test(path6)) {
+          debug('malicious path "%s"', path6);
           return { statusCode: 403 };
         }
-        parts = normalize(path5).split(sep);
-        path5 = resolve(path5);
+        parts = normalize(path6).split(sep);
+        path6 = resolve(path6);
       }
-      return { path: path5, parts };
+      return { path: path6, parts };
     }
-    function hasTrailingSlash(path5) {
-      return path5[path5.length - 1] === "/";
+    function hasTrailingSlash(path6) {
+      return path6[path6.length - 1] === "/";
     }
     function isConditionalGET(request) {
       return request.headers["if-match"] || request.headers["if-unmodified-since"] || request.headers["if-none-match"] || request.headers["if-modified-since"];
@@ -4928,9 +4928,9 @@ var require_send = __commonJS({
         lastModified <= ifRangeTimestamp
       );
     }
-    function tryStat(path5) {
+    function tryStat(path6) {
       return new Promise((resolve2) => {
-        fs.stat(path5, function onstat(error62, stat) {
+        fs.stat(path6, function onstat(error62, stat) {
           resolve2({ error: error62, stat });
         });
       });
@@ -4966,7 +4966,7 @@ var require_send = __commonJS({
           return sendError(500, err);
       }
     }
-    function sendNotModified(headers, path5, stat) {
+    function sendNotModified(headers, path6, stat) {
       debug("not modified");
       delete headers["Content-Encoding"];
       delete headers["Content-Language"];
@@ -4979,18 +4979,18 @@ var require_send = __commonJS({
         stream: Readable.from(""),
         // metadata
         type: "file",
-        metadata: { path: path5, stat }
+        metadata: { path: path6, stat }
       };
     }
-    async function sendFileDirectly(request, path5, stat, options) {
+    async function sendFileDirectly(request, path6, stat, options) {
       if (options.onFile !== null) {
-        await options.onFile(path5, stat);
+        await options.onFile(path6, stat);
       }
       let len = stat.size;
       let offset = options.start ?? 0;
       let statusCode = 200;
       const headers = {};
-      debug('send "%s"', path5);
+      debug('send "%s"', path6);
       if (options.acceptRanges) {
         debug("accept ranges");
         headers["Accept-Ranges"] = "bytes";
@@ -5014,7 +5014,7 @@ var require_send = __commonJS({
         headers.ETag = etag;
       }
       if (options.contentType) {
-        let type = mime.getType(path5) || mime.default_type;
+        let type = mime.getType(path6) || mime.default_type;
         debug("content-type %s", type);
         if (type && isUtf8MimeType(type)) {
           type += "; charset=utf-8";
@@ -5028,7 +5028,7 @@ var require_send = __commonJS({
           return sendError(412);
         }
         if (isNotModifiedFailure(request, headers)) {
-          return sendNotModified(headers, path5, stat);
+          return sendNotModified(headers, path6, stat);
         }
       }
       len = Math.max(0, len - offset);
@@ -5070,10 +5070,10 @@ var require_send = __commonJS({
           stream: Readable.from(""),
           // metadata
           type: "file",
-          metadata: { path: path5, stat }
+          metadata: { path: path6, stat }
         };
       }
-      const stream2 = fs.createReadStream(path5, {
+      const stream2 = fs.createReadStream(path6, {
         highWaterMark: options.highWaterMark,
         start: offset,
         end: Math.max(offset, offset + len - 1)
@@ -5084,10 +5084,10 @@ var require_send = __commonJS({
         stream: stream2,
         // metadata
         type: "file",
-        metadata: { path: path5, stat }
+        metadata: { path: path6, stat }
       };
     }
-    function sendRedirect(path5, options) {
+    function sendRedirect(path6, options) {
       if (hasTrailingSlash(options.path)) {
         return sendError(403);
       }
@@ -5105,14 +5105,14 @@ var require_send = __commonJS({
         stream: Readable.from(doc[0]),
         // metadata
         type: "directory",
-        metadata: { requestPath: options.path, path: path5 }
+        metadata: { requestPath: options.path, path: path6 }
       };
     }
-    async function sendIndex(request, path5, options) {
+    async function sendIndex(request, path6, options) {
       let err;
       for (let i = 0; i < options.index.length; i++) {
         const index = options.index[i];
-        const p = join(path5, index);
+        const p = join(path6, index);
         const { error: error62, stat } = await tryStat(p);
         if (error62) {
           err = error62;
@@ -5126,13 +5126,13 @@ var require_send = __commonJS({
       }
       return sendError(404);
     }
-    async function sendFile(request, path5, options) {
-      const { error: error62, stat } = await tryStat(path5);
-      if (error62 && error62.code === "ENOENT" && !extname(path5) && path5[path5.length - 1] !== sep) {
+    async function sendFile(request, path6, options) {
+      const { error: error62, stat } = await tryStat(path6);
+      if (error62 && error62.code === "ENOENT" && !extname(path6) && path6[path6.length - 1] !== sep) {
         let err = error62;
         for (let i = 0; i < options.extensions.length; i++) {
           const extension = options.extensions[i];
-          const p = path5 + "." + extension;
+          const p = path6 + "." + extension;
           const { error: error63, stat: stat2 } = await tryStat(p);
           if (error63) {
             err = error63;
@@ -5150,14 +5150,14 @@ var require_send = __commonJS({
         return sendError(404);
       }
       if (error62) return sendStatError(error62);
-      if (stat.isDirectory()) return sendRedirect(path5, options);
-      return sendFileDirectly(request, path5, stat, options);
+      if (stat.isDirectory()) return sendRedirect(path6, options);
+      return sendFileDirectly(request, path6, stat, options);
     }
     async function send(request, _path, options) {
       const opts = normalizeOptions(options);
       opts.path = _path;
       const parsed = normalizePath(_path, opts.root);
-      const { path: path5, parts } = parsed;
+      const { path: path6, parts } = parsed;
       if (parsed.statusCode !== void 0) {
         return sendError(parsed.statusCode);
       }
@@ -5167,23 +5167,23 @@ var require_send = __commonJS({
           /* c8 ignore start */
           /* unreachable, because NODE_DEBUG can not be set after process is running */
           case 0:
-            debug('allow dotfile "%s"', path5);
+            debug('allow dotfile "%s"', path6);
             break;
           /* c8 ignore stop */
           case 2:
-            debug('deny dotfile "%s"', path5);
+            debug('deny dotfile "%s"', path6);
             return sendError(403);
           case 1:
           // 'ignore'
           default:
-            debug('ignore dotfile "%s"', path5);
+            debug('ignore dotfile "%s"', path6);
             return sendError(404);
         }
       }
       if (opts.index.length && hasTrailingSlash(_path)) {
-        return sendIndex(request, path5, opts);
+        return sendIndex(request, path6, opts);
       }
-      return sendFile(request, path5, opts);
+      return sendFile(request, path6, opts);
     }
     module.exports.send = send;
   }
@@ -6079,7 +6079,7 @@ var require_dirList = __commonJS({
   "node_modules/@fastify/static/lib/dirList.js"(exports, module) {
     "use strict";
     var os2 = __require("node:os");
-    var path4 = __require("node:path");
+    var path5 = __require("node:path");
     var fs = __require("node:fs/promises");
     var fastq = require_queue();
     var {
@@ -6089,15 +6089,15 @@ var require_dirList = __commonJS({
     var fastqConcurrency = Math.max(1, os2.cpus().length - 1);
     var URL_DELIMITERS_REG = /[#?]/g;
     function isPathInsideRoot(root, target) {
-      const relativePath = path4.relative(root, target);
-      return relativePath === "" || relativePath !== ".." && !relativePath.startsWith(`..${path4.sep}`) && !path4.isAbsolute(relativePath);
+      const relativePath = path5.relative(root, target);
+      return relativePath === "" || relativePath !== ".." && !relativePath.startsWith(`..${path5.sep}`) && !path5.isAbsolute(relativePath);
     }
     var dirList = {
       _getExtendedInfo: async function(dir, info) {
-        const depth = dir.split(path4.sep).length;
+        const depth = dir.split(path5.sep).length;
         const files = await fs.readdir(dir);
         const worker = async (filename) => {
-          const filePath = path4.join(dir, filename);
+          const filePath = path5.join(dir, filename);
           let stats;
           try {
             stats = await fs.stat(filePath);
@@ -6106,12 +6106,12 @@ var require_dirList = __commonJS({
           }
           if (stats.isDirectory()) {
             info.totalFolderCount++;
-            filePath.split(path4.sep).length === depth + 1 && info.folderCount++;
+            filePath.split(path5.sep).length === depth + 1 && info.folderCount++;
             await dirList._getExtendedInfo(filePath, info);
           } else {
             info.totalSize += stats.size;
             info.totalFileCount++;
-            filePath.split(path4.sep).length === depth + 1 && info.fileCount++;
+            filePath.split(path5.sep).length === depth + 1 && info.fileCount++;
             info.lastModified = Math.max(info.lastModified, stats.mtimeMs);
           }
         };
@@ -6154,14 +6154,14 @@ var require_dirList = __commonJS({
         const worker = async (filename) => {
           let stats;
           try {
-            stats = await fs.stat(path4.join(dir, filename));
+            stats = await fs.stat(path5.join(dir, filename));
           } catch {
             return;
           }
           const entry = { name: filename, stats };
           if (stats.isDirectory()) {
             if (options.extendedFolderInfo) {
-              entry.extendedInfo = await dirList.getExtendedInfo(path4.join(dir, filename));
+              entry.extendedInfo = await dirList.getExtendedInfo(path5.join(dir, filename));
             }
             entries.dirs.push(entry);
           } else {
@@ -6217,12 +6217,12 @@ var require_dirList = __commonJS({
        * @return {ListFile}
        */
       htmlInfo: function(entry, route, prefix, options) {
-        if (options.names?.includes(path4.basename(route))) {
-          route = path4.posix.normalize(path4.posix.join(route, ".."));
+        if (options.names?.includes(path5.basename(route))) {
+          route = path5.posix.normalize(path5.posix.join(route, ".."));
         }
         return {
           // encodeURI leaves `#` and `?` as is, which would cut the href short
-          href: encodeURI(path4.posix.join(prefix, route, entry.name)).replace(URL_DELIMITERS_REG, encodeURIComponent),
+          href: encodeURI(path5.posix.join(prefix, route, entry.name)).replace(URL_DELIMITERS_REG, encodeURIComponent),
           name: entry.name,
           stats: entry.stats,
           extendedInfo: entry.extendedInfo
@@ -6235,7 +6235,7 @@ var require_dirList = __commonJS({
        * @return {boolean}
        */
       handle: function(route, options) {
-        return options.names?.includes(path4.basename(route)) || // match trailing slash
+        return options.names?.includes(path5.basename(route)) || // match trailing slash
         ((options.names?.includes("/") && route[route.length - 1] === "/") ?? false);
       },
       /**
@@ -6246,8 +6246,8 @@ var require_dirList = __commonJS({
        */
       path: function(root, route) {
         const relativeRoute = route[route.length - 1] === "/" ? "." + route + "none" : "." + route;
-        const resolvedRoot = path4.resolve(root);
-        const dir = path4.dirname(path4.resolve(resolvedRoot, relativeRoute));
+        const resolvedRoot = path5.resolve(root);
+        const dir = path5.dirname(path5.resolve(resolvedRoot, relativeRoute));
         return isPathInsideRoot(resolvedRoot, dir) ? dir : null;
       },
       /**
@@ -6283,7 +6283,7 @@ var require_dirList = __commonJS({
 var require_static = __commonJS({
   "node_modules/@fastify/static/index.js"(exports, module) {
     "use strict";
-    var path4 = __require("node:path");
+    var path5 = __require("node:path");
     var { fileURLToPath: fileURLToPath2 } = __require("node:url");
     var { statSync } = __require("node:fs");
     var { readdir, stat } = __require("node:fs/promises");
@@ -6439,7 +6439,7 @@ var require_static = __commonJS({
           const routes = /* @__PURE__ */ new Set();
           const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root];
           for (let rootPath of roots) {
-            rootPath = rootPath.split(path4.win32.sep).join(path4.posix.sep);
+            rootPath = rootPath.split(path5.win32.sep).join(path5.posix.sep);
             !rootPath.endsWith("/") && (rootPath += "/");
             const files = await glob("**/**", {
               cwd: rootPath,
@@ -6450,16 +6450,16 @@ var require_static = __commonJS({
               ignore: opts.globIgnore
             });
             for (let file2 of files) {
-              file2 = file2.split(path4.win32.sep).join(path4.posix.sep);
+              file2 = file2.split(path5.win32.sep).join(path5.posix.sep);
               const route = prefix + file2;
               if (routes.has(route)) {
                 continue;
               }
               routes.add(route);
               setUpHeadAndGet(routeOpts, route, `/${file2}`, rootPath);
-              const key = path4.posix.basename(route);
+              const key = path5.posix.basename(route);
               if (indexes.has(key) && !indexDirs.has(key)) {
-                indexDirs.set(path4.posix.dirname(route), rootPath);
+                indexDirs.set(path5.posix.dirname(route), rootPath);
               }
             }
           }
@@ -6499,13 +6499,13 @@ var require_static = __commonJS({
           } else {
             options.root = rootPath;
           }
-        } else if (path4.isAbsolute(pathname) === false) {
+        } else if (path5.isAbsolute(pathname) === false) {
           return reply.callNotFound();
         }
         if (dotDotSegmentRegex.test(pathname) && !leadingDotDotSegmentRegex.test(pathname)) {
           return reply.send(forbiddenPathError());
         }
-        const isWindowsFilesystemPath = path4.win32.isAbsolute(pathname) && !pathname.startsWith("/");
+        const isWindowsFilesystemPath = path5.win32.isAbsolute(pathname) && !pathname.startsWith("/");
         if (!isWindowsFilesystemPath && isNonCanonicalPathname(pathname)) {
           return reply.send(forbiddenPathError());
         }
@@ -6555,11 +6555,11 @@ var require_static = __commonJS({
         } = await send(request.raw, encodeURI(pathnameForSend), options);
         switch (type) {
           case "directory": {
-            const path5 = metadata.path;
+            const path6 = metadata.path;
             if (opts.list) {
               await dirList.send({
                 reply,
-                dir: path5,
+                dir: path6,
                 options: opts.list,
                 route: pathname,
                 prefix,
@@ -6713,7 +6713,7 @@ var require_static = __commonJS({
         if (new Set(rootPath).size !== rootPath.length) {
           throw new FST_STATIC_INVALID_OPTION("root", "array contains duplicate paths");
         }
-        rootPath.map((path5) => checkPath(fastify, path5, suppressWarning));
+        rootPath.map((path6) => checkPath(fastify, path6, suppressWarning));
         return;
       }
       if (typeof rootPath === "string") {
@@ -6725,7 +6725,7 @@ var require_static = __commonJS({
       if (typeof rootPath !== "string") {
         throw new FST_STATIC_INVALID_OPTION_VALUE("root", "must be a string");
       }
-      if (path4.isAbsolute(rootPath) === false) {
+      if (path5.isAbsolute(rootPath) === false) {
         throw new FST_STATIC_INVALID_OPTION("root", "must be an absolute path");
       }
       let pathStat;
@@ -6742,8 +6742,8 @@ var require_static = __commonJS({
         throw new FST_STATIC_INVALID_OPTION("root", "must be a directory");
       }
     }
-    function getContentType(path5) {
-      const type = send.mime.getType(path5) || send.mime.default_type;
+    function getContentType(path6) {
+      const type = send.mime.getType(path6) || send.mime.default_type;
       if (!send.isUtf8MimeType(type)) {
         return type;
       }
@@ -6759,7 +6759,7 @@ var require_static = __commonJS({
       if (!pathname.startsWith("/")) {
         return pathname;
       }
-      return path4.posix.normalize(pathname);
+      return path5.posix.normalize(pathname);
     }
     function isNonCanonicalPathname(pathname) {
       if (pathname.length === 0) {
@@ -6768,7 +6768,7 @@ var require_static = __commonJS({
       if (pathname.includes("\\")) {
         return true;
       }
-      return path4.posix.normalize(pathname) !== pathname;
+      return path5.posix.normalize(pathname) !== pathname;
     }
     async function getPathSpellingStatus(pathname, root) {
       if (typeof root !== "string") {
@@ -6784,7 +6784,7 @@ var require_static = __commonJS({
           return { status: isMissingPathError(error62) ? "missing" : "unverifiable" };
         }
         if (!entries.includes(segment)) {
-          const candidate = path4.join(root, ...segments);
+          const candidate = path5.join(root, ...segments);
           try {
             await stat(candidate);
             return { status: "alias" };
@@ -6792,13 +6792,13 @@ var require_static = __commonJS({
             return { status: isMissingPathError(error62) ? "missing" : "unverifiable" };
           }
         }
-        parent = path4.join(parent, segment);
+        parent = path5.join(parent, segment);
       }
       return { status: "exact" };
     }
     async function getSendPathSpellingStatus(pathname, root, extensions) {
       let result = await getPathSpellingStatus(pathname, root);
-      if (result.status !== "missing" || pathname.endsWith("/") || path4.posix.extname(pathname)) {
+      if (result.status !== "missing" || pathname.endsWith("/") || path5.posix.extname(pathname)) {
         return result.status;
       }
       const extensionList = typeof extensions === "string" ? [extensions] : Array.isArray(extensions) ? extensions : [];
@@ -6813,7 +6813,7 @@ var require_static = __commonJS({
         }
         try {
           const segments = extensionPathname.split("/").filter(Boolean);
-          if ((await stat(path4.join(root, ...segments))).isDirectory()) {
+          if ((await stat(path5.join(root, ...segments))).isDirectory()) {
             continue;
           }
         } catch (error62) {
@@ -6832,7 +6832,7 @@ var require_static = __commonJS({
     function findIndexFile(pathname, root, indexFiles = ["index.html"]) {
       if (Array.isArray(indexFiles)) {
         return indexFiles.find((filename) => {
-          const p = path4.join(root, pathname, filename);
+          const p = path5.join(root, pathname, filename);
           try {
             const stats = statSync(p);
             return !stats.isDirectory();
@@ -13783,7 +13783,7 @@ var require_websocket2 = __commonJS({
       delete wssOptions.server;
       const wss = new WebSocket.Server(wssOptions);
       fastify.decorate("websocketServer", wss);
-      async function injectWS(path4 = "/", upgradeContext = {}, options = {}) {
+      async function injectWS(path5 = "/", upgradeContext = {}, options = {}) {
         const server2Client = new PassThrough();
         const client2Server = new PassThrough();
         const serverStream = new Duplexify(server2Client, client2Server);
@@ -13823,7 +13823,7 @@ var require_websocket2 = __commonJS({
             "sec-websocket-key": randomBytes3(16).toString("base64")
           },
           httpVersion: "1.1",
-          url: path4,
+          url: path5,
           [kWs]: serverStream,
           [kWsHead]: head
         };
@@ -19826,8 +19826,8 @@ var require_req = __commonJS({
       if (req.originalUrl) {
         _req.url = req.originalUrl;
       } else {
-        const path4 = req.path;
-        _req.url = typeof path4 === "string" ? path4 : req.url ? req.url.path || req.url : void 0;
+        const path5 = req.path;
+        _req.url = typeof path5 === "string" ? path5 : req.url ? req.url.path || req.url : void 0;
       }
       if (req.query) {
         _req.query = req.query;
@@ -19997,14 +19997,14 @@ var require_redact = __commonJS({
       }
       return obj;
     }
-    function parsePath(path4) {
+    function parsePath(path5) {
       const parts = [];
       let current = "";
       let inBrackets = false;
       let inQuotes = false;
       let quoteChar = "";
-      for (let i = 0; i < path4.length; i++) {
-        const char = path4[i];
+      for (let i = 0; i < path5.length; i++) {
+        const char = path5[i];
         if (!inBrackets && char === ".") {
           if (current) {
             parts.push(current);
@@ -20135,10 +20135,10 @@ var require_redact = __commonJS({
       return current;
     }
     function redactPaths(obj, paths, censor, remove = false) {
-      for (const path4 of paths) {
-        const parts = parsePath(path4);
+      for (const path5 of paths) {
+        const parts = parsePath(path5);
         if (parts.includes("*")) {
-          redactWildcardPath(obj, parts, censor, path4, remove);
+          redactWildcardPath(obj, parts, censor, path5, remove);
         } else {
           if (remove) {
             removeKey(obj, parts);
@@ -20223,8 +20223,8 @@ var require_redact = __commonJS({
           }
         } else {
           if (afterWildcard.includes("*")) {
-            const wrappedCensor = typeof censor === "function" ? (value, path4) => {
-              const fullPath = [...pathArray.slice(0, pathLength), ...path4];
+            const wrappedCensor = typeof censor === "function" ? (value, path5) => {
+              const fullPath = [...pathArray.slice(0, pathLength), ...path5];
               return censor(value, fullPath);
             } : censor;
             redactWildcardPath(current, afterWildcard, wrappedCensor, originalPath, remove);
@@ -20259,8 +20259,8 @@ var require_redact = __commonJS({
         return null;
       }
       const pathStructure = /* @__PURE__ */ new Map();
-      for (const path4 of pathsToClone) {
-        const parts = parsePath(path4);
+      for (const path5 of pathsToClone) {
+        const parts = parsePath(path5);
         let current = pathStructure;
         for (let i = 0; i < parts.length; i++) {
           const part = parts[i];
@@ -20312,24 +20312,24 @@ var require_redact = __commonJS({
       }
       return cloneSelectively(obj, pathStructure);
     }
-    function validatePath(path4) {
-      if (typeof path4 !== "string") {
+    function validatePath(path5) {
+      if (typeof path5 !== "string") {
         throw new Error("Paths must be (non-empty) strings");
       }
-      if (path4 === "") {
+      if (path5 === "") {
         throw new Error("Invalid redaction path ()");
       }
-      if (path4.includes("..")) {
-        throw new Error(`Invalid redaction path (${path4})`);
+      if (path5.includes("..")) {
+        throw new Error(`Invalid redaction path (${path5})`);
       }
-      if (path4.includes(",")) {
-        throw new Error(`Invalid redaction path (${path4})`);
+      if (path5.includes(",")) {
+        throw new Error(`Invalid redaction path (${path5})`);
       }
       let bracketCount = 0;
       let inQuotes = false;
       let quoteChar = "";
-      for (let i = 0; i < path4.length; i++) {
-        const char = path4[i];
+      for (let i = 0; i < path5.length; i++) {
+        const char = path5[i];
         if ((char === '"' || char === "'") && bracketCount > 0) {
           if (!inQuotes) {
             inQuotes = true;
@@ -20343,20 +20343,20 @@ var require_redact = __commonJS({
         } else if (char === "]" && !inQuotes) {
           bracketCount--;
           if (bracketCount < 0) {
-            throw new Error(`Invalid redaction path (${path4})`);
+            throw new Error(`Invalid redaction path (${path5})`);
           }
         }
       }
       if (bracketCount !== 0) {
-        throw new Error(`Invalid redaction path (${path4})`);
+        throw new Error(`Invalid redaction path (${path5})`);
       }
     }
     function validatePaths(paths) {
       if (!Array.isArray(paths)) {
         throw new TypeError("paths must be an array");
       }
-      for (const path4 of paths) {
-        validatePath(path4);
+      for (const path5 of paths) {
+        validatePath(path5);
       }
     }
     function slowRedact(options = {}) {
@@ -20526,8 +20526,8 @@ var require_redaction = __commonJS({
         if (shape[k] === null) {
           o[k] = (value) => topCensor(value, [k]);
         } else {
-          const wrappedCensor = typeof censor === "function" ? (value, path4) => {
-            return censor(value, [k, ...path4]);
+          const wrappedCensor = typeof censor === "function" ? (value, path5) => {
+            return censor(value, [k, ...path5]);
           } : censor;
           o[k] = Redact({
             paths: shape[k],
@@ -20748,7 +20748,7 @@ var require_sonic_boom = __commonJS({
     var fs = __require("fs");
     var EventEmitter = __require("events");
     var inherits = __require("util").inherits;
-    var path4 = __require("path");
+    var path5 = __require("path");
     var sleep2 = require_atomic_sleep();
     var assert2 = __require("assert");
     var BUSY_WRITE_TIMEOUT = 100;
@@ -20802,7 +20802,7 @@ var require_sonic_boom = __commonJS({
       const mode = sonic.mode;
       if (sonic.sync) {
         try {
-          if (sonic.mkdir) fs.mkdirSync(path4.dirname(file2), { recursive: true });
+          if (sonic.mkdir) fs.mkdirSync(path5.dirname(file2), { recursive: true });
           const fd = fs.openSync(file2, flags, mode);
           fileOpened(null, fd);
         } catch (err) {
@@ -20810,7 +20810,7 @@ var require_sonic_boom = __commonJS({
           throw err;
         }
       } else if (sonic.mkdir) {
-        fs.mkdir(path4.dirname(file2), { recursive: true }, (err) => {
+        fs.mkdir(path5.dirname(file2), { recursive: true }, (err) => {
           if (err) return fileOpened(err);
           fs.open(file2, flags, mode, fileOpened);
         });
@@ -22143,15 +22143,15 @@ var require_transport = __commonJS({
       if (!unquoted) {
         return false;
       }
-      let path4 = unquoted;
-      if (path4.startsWith("file://")) {
+      let path5 = unquoted;
+      if (path5.startsWith("file://")) {
         try {
-          path4 = fileURLToPath2(path4);
+          path5 = fileURLToPath2(path5);
         } catch {
           return false;
         }
       }
-      return isAbsolute(path4) && !existsSync4(path4);
+      return isAbsolute(path5) && !existsSync4(path5);
     }
     function stripQuotes(value) {
       const first = value[0];
@@ -24231,7 +24231,7 @@ var require_logger_factory = __commonJS({
       }
       throw new FST_ERR_LOG_INVALID_LOG_CONTROLLER(typeof userController);
     }
-    function now() {
+    function now2() {
       return performance2.now();
     }
     module.exports = {
@@ -24241,7 +24241,7 @@ var require_logger_factory = __commonJS({
       createLogger,
       LogController,
       validateLogger,
-      now
+      now: now2
     };
   }
 });
@@ -24983,7 +24983,7 @@ var require_reply = __commonJS({
     } = require_hooks();
     var internals = require_handle_request()[/* @__PURE__ */ Symbol.for("internals")];
     var loggerUtils = require_logger_factory();
-    var now = loggerUtils.now;
+    var now2 = loggerUtils.now;
     var { handleError } = require_error_handler();
     var { getSchemaSerializer } = require_schemas();
     var CONTENT_TYPE = {
@@ -25034,7 +25034,7 @@ var require_reply = __commonJS({
           if (this[kReplyStartTime] === void 0) {
             return 0;
           }
-          return (this[kReplyEndTime] || now()) - this[kReplyStartTime];
+          return (this[kReplyEndTime] || now2()) - this[kReplyStartTime];
         }
       },
       mediaType: {
@@ -25708,9 +25708,9 @@ var require_reply = __commonJS({
       }
     }
     function setupResponseListeners(reply) {
-      reply[kReplyStartTime] = now();
+      reply[kReplyStartTime] = now2();
       const onResFinished = (err) => {
-        reply[kReplyEndTime] = now();
+        reply[kReplyEndTime] = now2();
         reply.raw.removeListener("finish", onResFinished);
         reply.raw.removeListener("error", onResFinished);
         const ctx = reply[kRouteContext];
@@ -30950,8 +30950,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path4) {
-      let input2 = path4;
+    function removeDotSegments(path5) {
+      let input2 = path5;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -31025,11 +31025,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path4) {
-      if (path4 === "" || path4[0] === "/") {
-        return removeDotSegments(path4);
+    function removeDotSegmentsRelative(path5) {
+      if (path5 === "" || path5[0] === "/") {
+        return removeDotSegments(path5);
       }
-      const segments = path4.split("/");
+      const segments = path5.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -31392,8 +31392,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path4 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path4 && path4 !== "/" ? path4 : void 0;
+        const path5 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path5 && path5 !== "/" ? path5 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -36471,8 +36471,8 @@ var require_utils2 = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path4) {
-      let input2 = path4;
+    function removeDotSegments(path5) {
+      let input2 = path5;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -36546,11 +36546,11 @@ var require_utils2 = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path4) {
-      if (path4 === "" || path4[0] === "/") {
-        return removeDotSegments(path4);
+    function removeDotSegmentsRelative(path5) {
+      if (path5 === "" || path5[0] === "/") {
+        return removeDotSegments(path5);
       }
-      const segments = path4.split("/");
+      const segments = path5.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -36970,8 +36970,8 @@ var require_schemes2 = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path4 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path4 && path4 !== "/" ? path4 : void 0;
+        const path5 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path5 && path5 !== "/" ? path5 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -38415,7 +38415,7 @@ var require_ajv_compiler = __commonJS({
 // node_modules/dequal/dist/index.js
 var require_dist3 = __commonJS({
   "node_modules/dequal/dist/index.js"(exports) {
-    var has = Object.prototype.hasOwnProperty;
+    var has2 = Object.prototype.hasOwnProperty;
     function find(iter, tar, key) {
       for (key of iter.keys()) {
         if (dequal(key, tar)) return key;
@@ -38481,7 +38481,7 @@ var require_dist3 = __commonJS({
         if (!ctor || typeof foo === "object") {
           len = 0;
           for (ctor in foo) {
-            if (has.call(foo, ctor) && ++len && !has.call(bar, ctor)) return false;
+            if (has2.call(foo, ctor) && ++len && !has2.call(bar, ctor)) return false;
             if (!(ctor in bar) || !dequal(foo[ctor], bar[ctor])) return false;
           }
           return Object.keys(bar).length === len;
@@ -39339,8 +39339,8 @@ var require_utils3 = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path4) {
-      let input2 = path4;
+    function removeDotSegments(path5) {
+      let input2 = path5;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -39414,11 +39414,11 @@ var require_utils3 = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path4) {
-      if (path4 === "" || path4[0] === "/") {
-        return removeDotSegments(path4);
+    function removeDotSegmentsRelative(path5) {
+      if (path5 === "" || path5[0] === "/") {
+        return removeDotSegments(path5);
       }
-      const segments = path4.split("/");
+      const segments = path5.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -39838,8 +39838,8 @@ var require_schemes3 = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path4 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path4 && path4 !== "/" ? path4 : void 0;
+        const path5 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path5 && path5 !== "/" ? path5 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -42040,7 +42040,7 @@ const asInteger = serializer.asInteger.bind(serializer)
     }
     function assertObjectDepth(schema, maxDepth, name) {
       const stack = [{ value: schema, depth: 0, exit: false }];
-      const path4 = /* @__PURE__ */ new WeakSet();
+      const path5 = /* @__PURE__ */ new WeakSet();
       let hasRef = false;
       while (stack.length > 0) {
         const entry = stack.pop();
@@ -42050,13 +42050,13 @@ const asInteger = serializer.asInteger.bind(serializer)
           throw schemaDepthError(maxDepth, name);
         }
         if (entry.exit) {
-          path4.delete(value);
+          path5.delete(value);
           continue;
         }
-        if (path4.has(value)) {
+        if (path5.has(value)) {
           throw new Error("schema contains a circular object reference; use $ref instead");
         }
-        path4.add(value);
+        path5.add(value);
         stack.push({ value, depth: entry.depth, exit: true });
         for (const key in value) {
           const child = value[key];
@@ -47300,8 +47300,8 @@ var require_node2 = __commonJS({
         return matchSingleCharPrefix;
       }
       if (prefix.length >= LONG_PREFIX_MIN_LENGTH) {
-        return function matchLongPrefix(path4, i) {
-          return path4.indexOf(prefix, i) === i;
+        return function matchLongPrefix(path5, i) {
+          return path5.indexOf(prefix, i) === i;
         };
       }
       const lines = [];
@@ -47350,13 +47350,13 @@ return ${lines.join(" && ")}`);
           this.staticChildrenNodes[index] = node2;
         }
       }
-      findStaticMatchingChild(path4, pathIndex) {
-        const charCode = path4.charCodeAt(pathIndex);
+      findStaticMatchingChild(path5, pathIndex) {
+        const charCode = path5.charCodeAt(pathIndex);
         const charCodes = this.staticChildrenCharCodes;
         for (let i = 0; i < charCodes.length; i++) {
           if (charCodes[i] === charCode) {
             const staticChild = this.staticChildrenNodes[i];
-            if (staticChild.matchPrefix(path4, pathIndex)) {
+            if (staticChild.matchPrefix(path5, pathIndex)) {
               return staticChild;
             }
             return null;
@@ -47364,34 +47364,34 @@ return ${lines.join(" && ")}`);
         }
         return null;
       }
-      getStaticChild(path4, pathIndex = 0) {
-        if (path4.length === pathIndex) {
+      getStaticChild(path5, pathIndex = 0) {
+        if (path5.length === pathIndex) {
           return this;
         }
-        const staticChild = this.findStaticMatchingChild(path4, pathIndex);
+        const staticChild = this.findStaticMatchingChild(path5, pathIndex);
         if (staticChild) {
-          return staticChild.getStaticChild(path4, pathIndex + staticChild.prefix.length);
+          return staticChild.getStaticChild(path5, pathIndex + staticChild.prefix.length);
         }
         return null;
       }
-      createStaticChild(path4) {
-        if (path4.length === 0) {
+      createStaticChild(path5) {
+        if (path5.length === 0) {
           return this;
         }
-        const childIndex = this.staticChildrenCharCodes.indexOf(path4.charCodeAt(0));
+        const childIndex = this.staticChildrenCharCodes.indexOf(path5.charCodeAt(0));
         let staticChild = childIndex === -1 ? void 0 : this.staticChildrenNodes[childIndex];
         if (staticChild) {
           let i = 1;
           for (; i < staticChild.prefix.length; i++) {
-            if (path4.charCodeAt(i) !== staticChild.prefix.charCodeAt(i)) {
+            if (path5.charCodeAt(i) !== staticChild.prefix.charCodeAt(i)) {
               staticChild = staticChild.split(this, i);
               break;
             }
           }
-          return staticChild.createStaticChild(path4.slice(i));
+          return staticChild.createStaticChild(path5.slice(i));
         }
-        const node2 = createStaticNode(path4);
-        this.setStaticChild(path4.charAt(0), node2);
+        const node2 = createStaticNode(path5);
+        this.setStaticChild(path5.charAt(0), node2);
         return node2;
       }
       getParametricChild(regex) {
@@ -47435,8 +47435,8 @@ return ${lines.join(" && ")}`);
       // static child, then the first parametric child, then the wildcard. Every
       // sibling that is skipped over is pushed on nodeStack as a flat triple
       // (node, pathIndex, paramsCount) so lookup can backtrack to it later.
-      getNextNode(path4, pathIndex, nodeStack, paramsCount) {
-        let node2 = this.findStaticMatchingChild(path4, pathIndex);
+      getNextNode(path5, pathIndex, nodeStack, paramsCount) {
+        let node2 = this.findStaticMatchingChild(path5, pathIndex);
         let parametricBrotherNodeIndex = 0;
         if (node2 === null) {
           if (this.parametricChildren.length === 0) {
@@ -47519,62 +47519,62 @@ var require_url_sanitizer = __commonJS({
       return String.fromCharCode(charCode);
     }
     var MIN_NATIVE_SCAN_LENGTH = 12;
-    function safeDecodeURI(path4, useSemicolonDelimiter) {
-      if (path4.length >= MIN_NATIVE_SCAN_LENGTH) {
-        return safeDecodeURINativeScan(path4, useSemicolonDelimiter);
+    function safeDecodeURI(path5, useSemicolonDelimiter) {
+      if (path5.length >= MIN_NATIVE_SCAN_LENGTH) {
+        return safeDecodeURINativeScan(path5, useSemicolonDelimiter);
       }
-      return safeDecodeURICharScan(path4, useSemicolonDelimiter, 1);
+      return safeDecodeURICharScan(path5, useSemicolonDelimiter, 1);
     }
-    function safeDecodeURINativeScan(path4, useSemicolonDelimiter) {
-      const percentIndex = path4.indexOf("%", 1);
-      let delimIndex = path4.indexOf("?", 1);
-      const hashIndex = path4.indexOf("#", 1);
+    function safeDecodeURINativeScan(path5, useSemicolonDelimiter) {
+      const percentIndex = path5.indexOf("%", 1);
+      let delimIndex = path5.indexOf("?", 1);
+      const hashIndex = path5.indexOf("#", 1);
       if (hashIndex !== -1 && (delimIndex === -1 || hashIndex < delimIndex)) {
         delimIndex = hashIndex;
       }
       if (useSemicolonDelimiter) {
-        const semicolonIndex = path4.indexOf(";", 1);
+        const semicolonIndex = path5.indexOf(";", 1);
         if (semicolonIndex !== -1 && (delimIndex === -1 || semicolonIndex < delimIndex)) {
           delimIndex = semicolonIndex;
         }
       }
       if (percentIndex === -1 || delimIndex !== -1 && percentIndex > delimIndex) {
         if (delimIndex === -1) {
-          return { path: path4, querystring: "", shouldDecodeParam: false };
+          return { path: path5, querystring: "", shouldDecodeParam: false };
         }
         return {
-          path: path4.slice(0, delimIndex),
-          querystring: path4.slice(delimIndex + 1),
+          path: path5.slice(0, delimIndex),
+          querystring: path5.slice(delimIndex + 1),
           shouldDecodeParam: false
         };
       }
-      return safeDecodeURIPercentScan(path4, useSemicolonDelimiter, percentIndex);
+      return safeDecodeURIPercentScan(path5, useSemicolonDelimiter, percentIndex);
     }
-    function safeDecodeURICharScan(path4, useSemicolonDelimiter, startIndex) {
-      for (let i = startIndex; i < path4.length; i++) {
-        const charCode = path4.charCodeAt(i);
+    function safeDecodeURICharScan(path5, useSemicolonDelimiter, startIndex) {
+      for (let i = startIndex; i < path5.length; i++) {
+        const charCode = path5.charCodeAt(i);
         if (charCode === 37) {
-          return safeDecodeURIPercentScan(path4, useSemicolonDelimiter, i);
+          return safeDecodeURIPercentScan(path5, useSemicolonDelimiter, i);
         } else if (charCode === 63 || charCode === 35 || charCode === 59 && useSemicolonDelimiter) {
           return {
-            path: path4.slice(0, i),
-            querystring: path4.slice(i + 1),
+            path: path5.slice(0, i),
+            querystring: path5.slice(i + 1),
             shouldDecodeParam: false
           };
         }
       }
-      return { path: path4, querystring: "", shouldDecodeParam: false };
+      return { path: path5, querystring: "", shouldDecodeParam: false };
     }
-    function safeDecodeURIPercentScan(path4, useSemicolonDelimiter, startIndex) {
+    function safeDecodeURIPercentScan(path5, useSemicolonDelimiter, startIndex) {
       let shouldDecode = false;
       let shouldDecodeParam = false;
       let querystring = "";
       let percentIndexes = null;
       let pathEnd = -1;
-      for (let i = startIndex; i < path4.length; i++) {
-        const charCode = path4.charCodeAt(i);
+      for (let i = startIndex; i < path5.length; i++) {
+        const charCode = path5.charCodeAt(i);
         if (charCode === 37) {
-          const componentCharCode = decodeComponentCharCode(path4.charCodeAt(i + 1), path4.charCodeAt(i + 2));
+          const componentCharCode = decodeComponentCharCode(path5.charCodeAt(i + 1), path5.charCodeAt(i + 2));
           if (componentCharCode === 0) {
             shouldDecode = true;
           } else {
@@ -47587,22 +47587,22 @@ var require_url_sanitizer = __commonJS({
             i += 2;
           }
         } else if (charCode === 63 || charCode === 35 || charCode === 59 && useSemicolonDelimiter) {
-          querystring = path4.slice(i + 1);
+          querystring = path5.slice(i + 1);
           pathEnd = i;
           break;
         }
       }
       let decodedPath;
       if (percentIndexes === null) {
-        decodedPath = pathEnd === -1 ? path4 : path4.slice(0, pathEnd);
+        decodedPath = pathEnd === -1 ? path5 : path5.slice(0, pathEnd);
       } else {
         const parts = [];
         let last = 0;
         for (const index of percentIndexes) {
-          parts.push(path4.slice(last, index), "%2525");
+          parts.push(path5.slice(last, index), "%2525");
           last = index + 3;
         }
-        parts.push(path4.slice(last, pathEnd === -1 ? path4.length : pathEnd));
+        parts.push(path5.slice(last, pathEnd === -1 ? path5.length : pathEnd));
         decodedPath = parts.join("");
       }
       if (shouldDecode) decodedPath = decodeURI(decodedPath);
@@ -48111,14 +48111,14 @@ var require_compiler = __commonJS({
     }
     function compileTree(router, root) {
       const sanitized = new TreeCompiler(router, false).compile(root, null);
-      const slow = function findSanitized(path4, derivedConstraints) {
-        return router._findSanitized(sanitized, path4, derivedConstraints);
+      const slow = function findSanitized(path5, derivedConstraints) {
+        return router._findSanitized(sanitized, path5, derivedConstraints);
       };
       if (!supportsRawMatching(router, root)) {
         return {
           find: slow,
-          lookup: function lookupSanitized(path4, derivedConstraints, req, res, ctx) {
-            return router.callHandler(slow(path4, derivedConstraints), req, res, ctx);
+          lookup: function lookupSanitized(path5, derivedConstraints, req, res, ctx) {
+            return router.callHandler(slow(path5, derivedConstraints), req, res, ctx);
           }
         };
       }
@@ -48518,7 +48518,7 @@ var require_find_my_way = __commonJS({
       const byPattern = router._routesByMethodAndPattern.get(method);
       return byPattern === void 0 ? void 0 : byPattern.get(pattern);
     }
-    Router.prototype.on = function on(method, path4, opts, handler, store) {
+    Router.prototype.on = function on(method, path5, opts, handler, store) {
       if (typeof opts === "function") {
         if (handler !== void 0) {
           store = handler;
@@ -48526,34 +48526,34 @@ var require_find_my_way = __commonJS({
         handler = opts;
         opts = {};
       }
-      assert2(typeof path4 === "string", "Path should be a string");
-      assert2(path4.length > 0, "The path could not be empty");
-      assert2(path4[0] === "/" || path4[0] === "*", "The first character of a path should be `/` or `*`");
+      assert2(typeof path5 === "string", "Path should be a string");
+      assert2(path5.length > 0, "The path could not be empty");
+      assert2(path5[0] === "/" || path5[0] === "*", "The first character of a path should be `/` or `*`");
       assert2(typeof handler === "function", "Handler should be a function");
-      const optionalParamMatch = path4.match(OPTIONAL_PARAM_REGEXP);
+      const optionalParamMatch = path5.match(OPTIONAL_PARAM_REGEXP);
       if (optionalParamMatch) {
-        assert2(path4.length === optionalParamMatch.index + optionalParamMatch[0].length, "Optional Parameter needs to be the last parameter of the path");
-        const pathFull = path4.replace(OPTIONAL_PARAM_REGEXP, "$1$2");
-        const pathOptional = path4.replace(OPTIONAL_PARAM_REGEXP, "$2") || "/";
+        assert2(path5.length === optionalParamMatch.index + optionalParamMatch[0].length, "Optional Parameter needs to be the last parameter of the path");
+        const pathFull = path5.replace(OPTIONAL_PARAM_REGEXP, "$1$2");
+        const pathOptional = path5.replace(OPTIONAL_PARAM_REGEXP, "$2") || "/";
         this.on(method, pathFull, opts, handler, store);
         this.on(method, pathOptional, opts, handler, store);
         return;
       }
-      const route = path4;
+      const route = path5;
       if (this.ignoreDuplicateSlashes) {
-        path4 = removeDuplicateSlashes(path4);
+        path5 = removeDuplicateSlashes(path5);
       }
       if (this.ignoreTrailingSlash) {
-        path4 = trimLastSlash(path4);
+        path5 = trimLastSlash(path5);
       }
       const methods = Array.isArray(method) ? method : [method];
       for (const method2 of methods) {
         assert2(typeof method2 === "string", "Method should be a string");
         assert2(httpMethods.includes(method2), `Method '${method2}' is not an http method.`);
-        this._on(method2, path4, opts, handler, store, route);
+        this._on(method2, path5, opts, handler, store, route);
       }
     };
-    Router.prototype._on = function _on(method, path4, opts, handler, store) {
+    Router.prototype._on = function _on(method, path5, opts, handler, store) {
       let constraints = {};
       if (opts.constraints !== void 0) {
         assert2(typeof opts.constraints === "object" && opts.constraints !== null, "Constraints should be an object");
@@ -48568,7 +48568,7 @@ var require_find_my_way = __commonJS({
       if (this.trees[method] === void 0) {
         this.trees[method] = createStaticNode("/");
       }
-      let pattern = path4;
+      let pattern = path5;
       if (pattern === "*" && this.trees[method].prefix.length !== 0) {
         const currentRoot = this.trees[method];
         this.trees[method] = createStaticNode("");
@@ -48679,7 +48679,7 @@ var require_find_my_way = __commonJS({
           }
         }
       }
-      const route = { method, path: path4, pattern, params, opts, handler, store };
+      const route = { method, path: path5, pattern, params, opts, handler, store };
       this.routes.push(route);
       if (sameRoutes !== void 0) {
         sameRoutes.push(route);
@@ -48693,15 +48693,15 @@ var require_find_my_way = __commonJS({
       }
       currentNode.addRoute(route, this.constrainer);
     };
-    Router.prototype.hasRoute = function hasRoute(method, path4, constraints) {
-      const route = this.findRoute(method, path4, constraints);
+    Router.prototype.hasRoute = function hasRoute(method, path5, constraints) {
+      const route = this.findRoute(method, path5, constraints);
       return route !== null;
     };
-    Router.prototype.findRoute = function findNode(method, path4, constraints = {}) {
+    Router.prototype.findRoute = function findNode(method, path5, constraints = {}) {
       if (this.trees[method] === void 0) {
         return null;
       }
-      let pattern = path4;
+      let pattern = path5;
       let currentNode = this.trees[method];
       let parentNodePathIndex = currentNode.prefix.length;
       const params = [];
@@ -48829,39 +48829,39 @@ var require_find_my_way = __commonJS({
       this.routes = [];
       this._routesByMethodAndPattern = /* @__PURE__ */ new Map();
     };
-    Router.prototype.off = function off(method, path4, constraints) {
-      assert2(typeof path4 === "string", "Path should be a string");
-      assert2(path4.length > 0, "The path could not be empty");
-      assert2(path4[0] === "/" || path4[0] === "*", "The first character of a path should be `/` or `*`");
+    Router.prototype.off = function off(method, path5, constraints) {
+      assert2(typeof path5 === "string", "Path should be a string");
+      assert2(path5.length > 0, "The path could not be empty");
+      assert2(path5[0] === "/" || path5[0] === "*", "The first character of a path should be `/` or `*`");
       assert2(
         typeof constraints === "undefined" || typeof constraints === "object" && !Array.isArray(constraints) && constraints !== null,
         "Constraints should be an object or undefined."
       );
-      const optionalParamMatch = path4.match(OPTIONAL_PARAM_REGEXP);
+      const optionalParamMatch = path5.match(OPTIONAL_PARAM_REGEXP);
       if (optionalParamMatch) {
-        assert2(path4.length === optionalParamMatch.index + optionalParamMatch[0].length, "Optional Parameter needs to be the last parameter of the path");
-        const pathFull = path4.replace(OPTIONAL_PARAM_REGEXP, "$1$2");
-        const pathOptional = path4.replace(OPTIONAL_PARAM_REGEXP, "$2") || "/";
+        assert2(path5.length === optionalParamMatch.index + optionalParamMatch[0].length, "Optional Parameter needs to be the last parameter of the path");
+        const pathFull = path5.replace(OPTIONAL_PARAM_REGEXP, "$1$2");
+        const pathOptional = path5.replace(OPTIONAL_PARAM_REGEXP, "$2") || "/";
         this.off(method, pathFull, constraints);
         this.off(method, pathOptional, constraints);
         return;
       }
       if (this.ignoreDuplicateSlashes) {
-        path4 = removeDuplicateSlashes(path4);
+        path5 = removeDuplicateSlashes(path5);
       }
       if (this.ignoreTrailingSlash) {
-        path4 = trimLastSlash(path4);
+        path5 = trimLastSlash(path5);
       }
       const methods = Array.isArray(method) ? method : [method];
       for (const method2 of methods) {
-        this._off(method2, path4, constraints);
+        this._off(method2, path5, constraints);
       }
     };
-    Router.prototype._off = function _off(method, path4, constraints) {
+    Router.prototype._off = function _off(method, path5, constraints) {
       assert2(typeof method === "string", "Method should be a string");
       assert2(httpMethods.includes(method), `Method '${method}' is not an http method.`);
       function matcherWithoutConstraints(route) {
-        return method !== route.method || path4 !== route.path;
+        return method !== route.method || path5 !== route.path;
       }
       function matcherWithConstraints(route) {
         return matcherWithoutConstraints(route) || !deepEqual(constraints, route.opts.constraints || {});
@@ -48898,40 +48898,40 @@ var require_find_my_way = __commonJS({
       if (handle === null) return this._defaultRoute(req, res, ctx);
       return ctx === void 0 ? handle.handler(req, res, handle.params, handle.store, handle.searchParams) : handle.handler.call(ctx, req, res, handle.params, handle.store, handle.searchParams);
     };
-    Router.prototype.find = function find(method, path4, derivedConstraints) {
+    Router.prototype.find = function find(method, path5, derivedConstraints) {
       let currentNode = method === "GET" ? this._treeGET : this.trees[method];
       if (currentNode == null) return null;
-      if (path4.charCodeAt(0) !== 47) {
-        const absolutePath = getPathFromAbsoluteUrl(path4);
+      if (path5.charCodeAt(0) !== 47) {
+        const absolutePath = getPathFromAbsoluteUrl(path5);
         if (absolutePath === null) {
-          return this._onBadUrl(path4);
+          return this._onBadUrl(path5);
         }
-        path4 = absolutePath;
+        path5 = absolutePath;
       }
       let sanitizedUrl;
       let querystring2;
       let shouldDecodeParam;
       try {
-        sanitizedUrl = path4.length >= MIN_NATIVE_SCAN_LENGTH ? safeDecodeURINativeScan(path4, this.useSemicolonDelimiter) : safeDecodeURICharScan(path4, this.useSemicolonDelimiter, 1);
-        path4 = sanitizedUrl.path;
+        sanitizedUrl = path5.length >= MIN_NATIVE_SCAN_LENGTH ? safeDecodeURINativeScan(path5, this.useSemicolonDelimiter) : safeDecodeURICharScan(path5, this.useSemicolonDelimiter, 1);
+        path5 = sanitizedUrl.path;
         querystring2 = sanitizedUrl.querystring;
         shouldDecodeParam = sanitizedUrl.shouldDecodeParam;
       } catch (error62) {
-        return this._onBadUrl(path4);
+        return this._onBadUrl(path5);
       }
       if (this.ignoreDuplicateSlashes) {
-        path4 = removeDuplicateSlashes(path4);
+        path5 = removeDuplicateSlashes(path5);
       }
       if (this.ignoreTrailingSlash) {
-        path4 = trimLastSlash(path4);
+        path5 = trimLastSlash(path5);
       }
-      const originPath = path4;
+      const originPath = path5;
       if (this.caseSensitive === false) {
-        path4 = path4.toLowerCase();
+        path5 = path5.toLowerCase();
       }
       const maxParamLength = this.maxParamLength;
       let pathIndex = currentNode.prefix.length;
-      const pathLen = path4.length;
+      const pathLen = path5.length;
       let paramsCount = 0;
       let param0, param1, param2, param3;
       let extraParams = null;
@@ -48949,7 +48949,7 @@ var require_find_my_way = __commonJS({
             };
           }
         }
-        let node2 = currentNode.getNextNode(path4, pathIndex, brothersNodesStack, paramsCount);
+        let node2 = currentNode.getNextNode(path5, pathIndex, brothersNodesStack, paramsCount);
         if (node2 === null) {
           if (brothersNodesStack.length === 0) {
             if (maxParamLengthExceeded && this.onMaxParamLength) {
@@ -49061,13 +49061,13 @@ var require_find_my_way = __commonJS({
       }
       return compiled;
     };
-    Router.prototype._findCompiled = function _findCompiled(method, path4, derivedConstraints) {
+    Router.prototype._findCompiled = function _findCompiled(method, path5, derivedConstraints) {
       let compiled = method === "GET" ? this._compiledGET : this._compiledTrees[method];
       if (compiled == null) {
         compiled = this._compileTree(method);
         if (compiled === null) return null;
       }
-      return compiled.find(path4, derivedConstraints);
+      return compiled.find(path5, derivedConstraints);
     };
     Router.prototype._lookupCompiled = function _lookupCompiled(req, res, ctx, done) {
       if (typeof ctx === "function" || done !== void 0) {
@@ -49082,42 +49082,42 @@ var require_find_my_way = __commonJS({
       }
       return compiled.lookup(req.url, derivedConstraints, req, res, ctx);
     };
-    Router.prototype._findSanitized = function _findSanitized(matcher, path4, derivedConstraints) {
-      if (path4.charCodeAt(0) !== 47) {
-        const absolutePath = getPathFromAbsoluteUrl(path4);
+    Router.prototype._findSanitized = function _findSanitized(matcher, path5, derivedConstraints) {
+      if (path5.charCodeAt(0) !== 47) {
+        const absolutePath = getPathFromAbsoluteUrl(path5);
         if (absolutePath === null) {
-          return this._onBadUrl(path4);
+          return this._onBadUrl(path5);
         }
-        path4 = absolutePath;
+        path5 = absolutePath;
       }
       let sanitizedUrl;
       let querystring2;
       let shouldDecodeParam;
       try {
-        sanitizedUrl = path4.length >= MIN_NATIVE_SCAN_LENGTH ? safeDecodeURINativeScan(path4, this.useSemicolonDelimiter) : safeDecodeURICharScan(path4, this.useSemicolonDelimiter, 1);
-        path4 = sanitizedUrl.path;
+        sanitizedUrl = path5.length >= MIN_NATIVE_SCAN_LENGTH ? safeDecodeURINativeScan(path5, this.useSemicolonDelimiter) : safeDecodeURICharScan(path5, this.useSemicolonDelimiter, 1);
+        path5 = sanitizedUrl.path;
         querystring2 = sanitizedUrl.querystring;
         shouldDecodeParam = sanitizedUrl.shouldDecodeParam;
       } catch (error62) {
-        return this._onBadUrl(path4);
+        return this._onBadUrl(path5);
       }
       if (this.ignoreDuplicateSlashes) {
-        path4 = removeDuplicateSlashes(path4);
+        path5 = removeDuplicateSlashes(path5);
       }
       if (this.ignoreTrailingSlash) {
-        path4 = trimLastSlash(path4);
+        path5 = trimLastSlash(path5);
       }
-      const originPath = path4;
+      const originPath = path5;
       if (this.caseSensitive === false) {
-        path4 = path4.toLowerCase();
+        path5 = path5.toLowerCase();
       }
-      return matcher(path4, originPath, shouldDecodeParam, derivedConstraints, querystring2);
+      return matcher(path5, originPath, shouldDecodeParam, derivedConstraints, querystring2);
     };
     Router.prototype._rebuild = function(routes) {
       this.reset();
       for (const route of routes) {
-        const { method, path: path4, opts, handler, store } = route;
-        this._on(method, path4, opts, handler, store);
+        const { method, path: path5, opts, handler, store } = route;
+        this._on(method, path5, opts, handler, store);
       }
     };
     Router.prototype._defaultRoute = function(req, res, ctx) {
@@ -49128,24 +49128,24 @@ var require_find_my_way = __commonJS({
         res.end();
       }
     };
-    Router.prototype._onBadUrl = function(path4) {
+    Router.prototype._onBadUrl = function(path5) {
       if (this.onBadUrl === null) {
         return null;
       }
       const onBadUrl = this.onBadUrl;
       return {
-        handler: (req, res, ctx) => onBadUrl(path4, req, res),
+        handler: (req, res, ctx) => onBadUrl(path5, req, res),
         params: {},
         store: null
       };
     };
-    Router.prototype._onMaxParamLength = function(path4) {
+    Router.prototype._onMaxParamLength = function(path5) {
       if (this.onMaxParamLength === null) {
         return null;
       }
       const onMaxParamLength = this.onMaxParamLength;
       return {
-        handler: (req, res, ctx) => onMaxParamLength(path4, req, res),
+        handler: (req, res, ctx) => onMaxParamLength(path5, req, res),
         params: {},
         store: null
       };
@@ -49177,12 +49177,12 @@ var require_find_my_way = __commonJS({
       if (!httpMethods.hasOwnProperty(i)) continue;
       const m = httpMethods[i];
       const methodName = m.toLowerCase();
-      Router.prototype[methodName] = function(path4, handler, store) {
-        return this.on(m, path4, handler, store);
+      Router.prototype[methodName] = function(path5, handler, store) {
+        return this.on(m, path5, handler, store);
       };
     }
-    Router.prototype.all = function(path4, handler, store) {
-      this.on(httpMethods, path4, handler, store);
+    Router.prototype.all = function(path5, handler, store) {
+      this.on(httpMethods, path5, handler, store);
     };
     Router.sanitizeUrlPath = function sanitizeUrlPath(url2, useSemicolonDelimiter) {
       const decoded = safeDecodeURI(url2, useSemicolonDelimiter);
@@ -49231,14 +49231,14 @@ var require_find_my_way = __commonJS({
       }
       return url2.slice(pathStart);
     }
-    function removeDuplicateSlashes(path4) {
-      return path4.indexOf("//") !== -1 ? path4.replace(REMOVE_DUPLICATE_SLASHES_REGEXP, "/") : path4;
+    function removeDuplicateSlashes(path5) {
+      return path5.indexOf("//") !== -1 ? path5.replace(REMOVE_DUPLICATE_SLASHES_REGEXP, "/") : path5;
     }
-    function trimLastSlash(path4) {
-      if (path4.length > 1 && path4.charCodeAt(path4.length - 1) === 47) {
-        return path4.slice(0, -1);
+    function trimLastSlash(path5) {
+      if (path5.length > 1 && path5.charCodeAt(path5.length - 1) === 47) {
+        return path5.slice(0, -1);
       }
-      return path4;
+      return path5;
     }
     function trimRegExpStartAndEnd(regexString) {
       if (regexString.charCodeAt(1) === 94) {
@@ -49249,22 +49249,22 @@ var require_find_my_way = __commonJS({
       }
       return regexString;
     }
-    function getClosingParenthensePosition(path4, idx) {
+    function getClosingParenthensePosition(path5, idx) {
       let parentheses = 1;
-      while (idx < path4.length) {
+      while (idx < path5.length) {
         idx++;
-        if (path4.charCodeAt(idx) === 92) {
+        if (path5.charCodeAt(idx) === 92) {
           idx++;
           continue;
         }
-        if (path4.charCodeAt(idx) === 41) {
+        if (path5.charCodeAt(idx) === 41) {
           parentheses--;
-        } else if (path4.charCodeAt(idx) === 40) {
+        } else if (path5.charCodeAt(idx) === 40) {
           parentheses++;
         }
         if (!parentheses) return idx;
       }
-      throw new TypeError('Invalid regexp expression in "' + path4 + '"');
+      throw new TypeError('Invalid regexp expression in "' + path5 + '"');
     }
     function defaultBuildPrettyMeta(route) {
       if (!route) return {};
@@ -49497,12 +49497,12 @@ var require_route = __commonJS({
       function route({ options: options2, isFastify }) {
         throwIfAlreadyStarted("Cannot add route!");
         const opts = { ...options2 };
-        const path4 = opts.url || opts.path || "";
+        const path5 = opts.url || opts.path || "";
         if (!opts.handler) {
-          throw new FST_ERR_ROUTE_MISSING_HANDLER(opts.method, path4);
+          throw new FST_ERR_ROUTE_MISSING_HANDLER(opts.method, path5);
         }
         if (opts.errorHandler !== void 0 && typeof opts.errorHandler !== "function") {
-          throw new FST_ERR_ROUTE_HANDLER_NOT_FN(opts.method, path4);
+          throw new FST_ERR_ROUTE_HANDLER_NOT_FN(opts.method, path5);
         }
         validateBodyLimitOption(opts.bodyLimit);
         validateHandlerTimeoutOption(opts.handlerTimeout);
@@ -49512,22 +49512,22 @@ var require_route = __commonJS({
         if (Array.isArray(opts.method)) {
           for (let i = 0; i < opts.method.length; ++i) {
             opts.method[i] = normalizeAndValidateMethod.call(this, opts.method[i]);
-            validateSchemaBodyOption.call(this, opts.method[i], path4, opts.schema);
+            validateSchemaBodyOption.call(this, opts.method[i], path5, opts.schema);
             isGetRoute = opts.method.includes("GET");
             isHeadRoute = opts.method.includes("HEAD");
           }
         } else {
           opts.method = normalizeAndValidateMethod.call(this, opts.method);
-          validateSchemaBodyOption.call(this, opts.method, path4, opts.schema);
+          validateSchemaBodyOption.call(this, opts.method, path5, opts.schema);
           isGetRoute = opts.method === "GET";
           isHeadRoute = opts.method === "HEAD";
         }
         const headOpts = shouldExposeHead && isGetRoute ? { ...options2 } : null;
         const prefix = this[kRoutePrefix];
-        if (path4 === "/" && prefix.length > 0 && opts.method !== "HEAD") {
+        if (path5 === "/" && prefix.length > 0 && opts.method !== "HEAD") {
           switch (opts.prefixTrailingSlash) {
             case "slash":
-              addNewRoute.call(this, { path: path4, isFastify });
+              addNewRoute.call(this, { path: path5, isFastify });
               break;
             case "no-slash":
               addNewRoute.call(this, { path: "", isFastify });
@@ -49536,20 +49536,20 @@ var require_route = __commonJS({
             default:
               addNewRoute.call(this, { path: "", isFastify });
               if (ignoreTrailingSlash !== true && (ignoreDuplicateSlashes !== true || !prefix.endsWith("/"))) {
-                addNewRoute.call(this, { path: path4, prefixing: true, isFastify });
+                addNewRoute.call(this, { path: path5, prefixing: true, isFastify });
               }
           }
-        } else if (path4[0] === "/" && prefix.endsWith("/")) {
-          addNewRoute.call(this, { path: path4.slice(1), isFastify });
+        } else if (path5[0] === "/" && prefix.endsWith("/")) {
+          addNewRoute.call(this, { path: path5.slice(1), isFastify });
         } else {
-          addNewRoute.call(this, { path: path4, isFastify });
+          addNewRoute.call(this, { path: path5, isFastify });
         }
         return this;
-        function addNewRoute({ path: path5, prefixing = false, isFastify: isFastify2 = false }) {
-          const url2 = prefix + path5;
+        function addNewRoute({ path: path6, prefixing = false, isFastify: isFastify2 = false }) {
+          const url2 = prefix + path6;
           opts.url = url2;
           opts.path = url2;
-          opts.routePath = path5;
+          opts.routePath = path6;
           opts.prefix = prefix;
           opts.logLevel = opts.logLevel || this[kLogLevel];
           validateLogLevelOption(opts.logLevel, opts.method, opts.url, logger);
@@ -49682,7 +49682,7 @@ var require_route = __commonJS({
           });
           if (shouldExposeHead && isGetRoute && !isHeadRoute && !hasHEADHandler) {
             const onSendHandlers = parseHeadOnSendHandlers(headOpts.onSend);
-            prepareRoute.call(this, { method: "HEAD", url: path5, options: { ...headOpts, onSend: onSendHandlers }, isFastify: true });
+            prepareRoute.call(this, { method: "HEAD", url: path6, options: { ...headOpts, onSend: onSendHandlers }, isFastify: true });
           }
         }
       }
@@ -49807,9 +49807,9 @@ var require_route = __commonJS({
       }
       return method;
     }
-    function validateSchemaBodyOption(method, path4, schema) {
+    function validateSchemaBodyOption(method, path5, schema) {
       if (this[kSupportedHTTPMethods].bodyless.has(method) && schema?.body) {
-        throw new FST_ERR_ROUTE_BODY_VALIDATION_SCHEMA_NOT_SUPPORTED(method, path4);
+        throw new FST_ERR_ROUTE_BODY_VALIDATION_SCHEMA_NOT_SUPPORTED(method, path5);
       }
     }
     function validateBodyLimitOption(bodyLimit) {
@@ -49824,11 +49824,11 @@ var require_route = __commonJS({
         throw new FST_ERR_ROUTE_HANDLER_TIMEOUT_OPTION_NOT_INT(handlerTimeout);
       }
     }
-    function validateLogLevelOption(logLevel, method, path4, logger) {
+    function validateLogLevelOption(logLevel, method, path5, logger) {
       if (logLevel == null || logLevel === "") return;
       if (logger?.levels?.values == null) return;
       if (typeof logLevel !== "string" || logger.levels.values[logLevel] === void 0) {
-        throw new FST_ERR_ROUTE_LOG_LEVEL_INVALID(method, path4, logLevel);
+        throw new FST_ERR_ROUTE_LOG_LEVEL_INVALID(method, path5, logLevel);
       }
     }
     function runPreParsing(err, request, reply) {
@@ -50471,14 +50471,14 @@ var require_cookies = __commonJS({
     "use strict";
     var { stringifySetCookie: stringifySetCookie2 } = (init_dist2(), __toCommonJS(dist_exports2));
     function cookiePathMatches(cookiePath, requestPath) {
-      const path4 = cookiePath || "/";
-      if (requestPath === path4) {
+      const path5 = cookiePath || "/";
+      if (requestPath === path5) {
         return true;
       }
-      if (!requestPath.startsWith(path4)) {
+      if (!requestPath.startsWith(path5)) {
         return false;
       }
-      return path4.endsWith("/") || requestPath.charAt(path4.length) === "/";
+      return path5.endsWith("/") || requestPath.charAt(path5.length) === "/";
     }
     function listCookies(cookies) {
       if (Array.isArray(cookies)) {
@@ -52963,19 +52963,19 @@ var require_fastify = __commonJS({
         }
         fourOhFour.router.lookup(req, res);
       }
-      function onBadUrl(path4, req, res) {
+      function onBadUrl(path5, req, res) {
         if (options.frameworkErrors) {
           const id = getGenReqId(routeEventContext.server, req);
           const childLogger = createChildLogger(routeEventContext, options.logger, req, id);
           const request = new Request(id, null, req, null, childLogger, routeEventContext);
           const reply = new Reply(res, request, childLogger);
           routeEventContext.server[kLogController].incomingRequest(request, reply);
-          return options.frameworkErrors(new FST_ERR_BAD_URL(path4), request, reply);
+          return options.frameworkErrors(new FST_ERR_BAD_URL(path5), request, reply);
         }
         const body = JSON.stringify({
           error: "Bad Request",
           code: "FST_ERR_BAD_URL",
-          message: `'${path4}' is not a valid url component`,
+          message: `'${path5}' is not a valid url component`,
           statusCode: 400
         });
         res.writeHead(400, {
@@ -52984,19 +52984,19 @@ var require_fastify = __commonJS({
         });
         res.end(body);
       }
-      function onMaxParamLength(path4, req, res) {
+      function onMaxParamLength(path5, req, res) {
         if (options.frameworkErrors) {
           const id = getGenReqId(routeEventContext.server, req);
           const childLogger = createChildLogger(routeEventContext, options.logger, req, id);
           const request = new Request(id, null, req, null, childLogger, routeEventContext);
           const reply = new Reply(res, request, childLogger);
           routeEventContext.server[kLogController].incomingRequest(request, reply);
-          return options.frameworkErrors(new FST_ERR_MAX_PARAM_LENGTH(path4), request, reply);
+          return options.frameworkErrors(new FST_ERR_MAX_PARAM_LENGTH(path5), request, reply);
         }
         const body = JSON.stringify({
           error: "Bad Request",
           code: "FST_ERR_MAX_PARAM_LENGTH",
-          message: `'${path4}' is exceeding the max param length`,
+          message: `'${path5}' is exceeding the max param length`,
           statusCode: 414
         });
         res.writeHead(414, {
@@ -53254,11 +53254,13 @@ ${body}`);
 
 // packages/daemon/src/main.ts
 import { randomBytes as randomBytes2 } from "node:crypto";
-import { chmodSync, existsSync as existsSync3, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import path3 from "node:path";
+import { chmodSync, existsSync as existsSync3, mkdirSync as mkdirSync2, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import path4 from "node:path";
 
 // packages/daemon/src/company.ts
 import { randomBytes } from "node:crypto";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 
 // packages/daemon/src/org.ts
 var OPUS = "claude-opus-5-5";
@@ -53290,19 +53292,84 @@ function roleById(id) {
 function modelFor(role, level) {
   return level === "mts" ? OPUS : role.defaultModel;
 }
+var WORK_LEAD_ROLES = ["tech-lead", "cto", "ceo"];
+var TASK_LEAD_ROLES = /* @__PURE__ */ new Set(["ceo", "cto", "tech-lead", "architect"]);
+var BUILDER_ROLES = /* @__PURE__ */ new Set([
+  "architect",
+  "frontend",
+  "backend-node",
+  "backend-python",
+  "fullstack",
+  "database",
+  "data-ml",
+  "qa",
+  "devops",
+  "security",
+  "designer",
+  "writer"
+]);
+var PERSONA_NAMES = [
+  "Aarav Kapoor",
+  "Meera Iyer",
+  "Arjun Mehta",
+  "Sana Qureshi",
+  "Priya Nair",
+  "Rahul Verma",
+  "Kabir Shah",
+  "Neha Joshi",
+  "Vikram Rao",
+  "Ananya Das",
+  "Rohan Gupta",
+  "Isha Menon",
+  "Dev Malhotra",
+  "Tara Sen",
+  "Kunal Bose",
+  "Aisha Khan",
+  "Nikhil Jain",
+  "Zara Ali"
+];
 
 // packages/daemon/src/prompts.ts
 var OWNER_ID = "owner";
 var CHANNELS = ["#general"];
 var FOUNDING_TEAM = [
-  { id: "ceo", name: "Aarav Kapoor", roleId: "ceo", managerId: null },
-  { id: "hr", name: "Meera Iyer", roleId: "hr", managerId: "ceo" }
+  { id: "ceo", name: "Aarav Kapoor", roleId: "ceo" },
+  { id: "hr", name: "Meera Iyer", roleId: "hr" }
 ];
 function agentTypeFor(roleId) {
   return `olympus:${roleId}`;
 }
-function hrOnboardingMessage(companyName) {
-  return `Welcome to ${companyName}. The company starts today. Introduce yourself in #general as your role instructions describe, then wait for requests from the CEO.`;
+var PHASE_LABEL = {
+  planning: "Planning (the CEO is preparing the PRD)",
+  prd_review: "PRD waiting for the Owner\u2019s approval",
+  approved: "PRD approved: hiring and planning",
+  building: "Building",
+  done: "All tasks done"
+};
+function projectSection(project, isBuilder, myTasks) {
+  if (!project) return "## Project\nNo project yet. The Owner starts one with /olympus:brief.";
+  const latest = project.prd.at(-1);
+  const prd = latest ? `PRD v${latest.version} "${latest.title}": ${latest.status.replace("_", " ")}. Read it with get_project.` : "No PRD yet.";
+  const lines = [
+    "## Project",
+    `Brief from the Owner: ${project.brief}`,
+    `Phase: ${PHASE_LABEL[project.phase]}`,
+    prd
+  ];
+  if (isBuilder) {
+    lines.push(
+      `Project folder: ${project.workspaceDir}`,
+      "Create and edit files only inside that folder (use absolute paths). Never touch files anywhere else."
+    );
+  }
+  if (myTasks.length > 0) {
+    lines.push(
+      "",
+      "## Your open tasks",
+      ...myTasks.map((t) => `- ${t.id} [${t.status}] ${t.title}`)
+    );
+  }
+  return lines.join("\n");
 }
 function activationPrompt(opts) {
   const messages = opts.inbox.map((item, i) => `--- Message ${i + 1} \xB7 from ${item.fromLabel} \xB7 ${item.ts} ---
@@ -53311,8 +53378,10 @@ ${item.text}`).join("\n\n");
 
 Your activation id is ${opts.activationId}. Pass it as the \`activation\` argument in every company tool call.
 
-## Team
+## Team (who reports to whom)
 ${opts.roster}
+
+${projectSection(opts.project, opts.isBuilder, opts.myTasks)}
 
 ## New messages (${opts.inbox.length})
 ${messages}
@@ -53321,8 +53390,11 @@ Act on these messages with the company tools. If a tool says you no longer work 
 }
 
 // packages/daemon/src/company.ts
-var MAX_MESSAGES_IN_STATE = 500;
+var MAX_MESSAGES = 1e3;
+var MAX_METRIC_POINTS = 5e3;
 var MAX_PROPOSED_HIRES = 12;
+var SINGLE_SEAT_ROLES = /* @__PURE__ */ new Set(["ceo", "hr", "cto"]);
+var TASK_STATUSES = ["todo", "in_progress", "review", "blocked", "done"];
 var CompanyError = class extends Error {
   constructor(statusCode, message) {
     super(message);
@@ -53333,96 +53405,231 @@ var CompanyError = class extends Error {
 var Company = class {
   constructor(opts) {
     this.opts = opts;
-    this.hireFoundingTeam();
+    this.settings = { ...opts.settings };
+    const saved = opts.persist?.load() ?? null;
+    if (saved) this.restore(saved);
+    else this.hireFounders();
+    this.scheduleSoon();
   }
   opts;
   members = /* @__PURE__ */ new Map();
   messages = [];
   proposals = [];
+  project = null;
+  tasks = [];
+  settings;
+  metrics = emptyMetrics();
   nextMessageId = 1;
-  activationsThisRun = 0;
-  demo = idleDemo();
-  runtime = null;
-  /** Bumped on every reset so activations from an earlier run can't write into a new one. */
+  nextTaskId = 1;
+  activationsThisProject = 0;
+  /** Bumped on reset and new project so earlier activations can't write into the new state. */
   generation = 0;
   scheduleQueued = false;
-  runLimitNoticeSent = false;
+  saveTimer = null;
+  limitNoticeSent = false;
+  limitNoticed = /* @__PURE__ */ new Set();
+  // ───────────────────────────── state for the dashboard ─────────────────────────────
   snapshot() {
-    const { config: config2 } = this.opts;
     const host = this.opts.runtimes.host?.counts() ?? { waiting: 0, running: 0, lastSeenAt: null };
+    const busy = this.isBusy();
+    const latest = this.project?.prd.at(-1);
+    let waitingFor = null;
+    if (this.settings.mode === "claude-code" && host.waiting > 0 && host.running === 0) waitingFor = "claude_code";
+    else if (!busy && latest?.status === "pending") waitingFor = "owner_prd";
     return {
-      companyName: config2.companyName,
-      limits: {
-        maxConcurrency: config2.maxConcurrency,
-        maxActivationsPerEmployee: config2.maxActivationsPerEmployee,
-        maxActivationsPerRun: config2.maxActivationsPerRun
-      },
-      activationsThisRun: this.activationsThisRun,
+      companyName: this.opts.companyName,
+      settings: { ...this.settings },
+      activationsThisProject: this.activationsThisProject,
       roles: ORG_ROLES,
-      employees: [...this.members.values()].map((m) => ({ ...m.data })),
+      employees: [...this.members.values()].map((m) => ({ ...m.data, managerId: this.managerOf(m.data) })),
       proposals: [...this.proposals],
-      messages: this.messages.slice(-MAX_MESSAGES_IN_STATE),
-      demo: { ...this.demo },
-      host
+      project: this.project ? structuredClone(this.project) : null,
+      tasks: structuredClone(this.tasks),
+      messages: this.messages.slice(-500),
+      host,
+      metrics: {
+        activations: this.metrics.activations.slice(-MAX_METRIC_POINTS),
+        tasksDone: this.metrics.tasksDone.slice(-MAX_METRIC_POINTS),
+        messages: this.metrics.messages.slice(-MAX_METRIC_POINTS)
+      },
+      busy,
+      waitingFor
     };
   }
-  /** Starts a fresh run: new founding team, the Owner's brief to the CEO, onboarding to HR. */
-  startDemo(brief, mode) {
-    if (this.demo.running) {
-      throw new CompanyError(409, "A run is already in progress. Reset it first.");
+  // ───────────────────────────── Owner actions ─────────────────────────────
+  /** Starts a new project: the CEO gets the brief. The team stays; tasks and proposals start fresh. */
+  startProject(brief) {
+    const ceo = this.activeInRole("ceo");
+    if (!ceo) throw new CompanyError(409, "There is no CEO. Hire a CEO first (Org chart \u2192 Hire, or /olympus:hire ceo).");
+    this.generation++;
+    for (const member of this.members.values()) {
+      member.controller?.abort();
+      member.controller = null;
+      member.inbox = [];
+      member.projectActivations = 0;
+      if (member.data.status !== "fired") this.setStatus(member, "idle", "Waiting for work");
     }
-    const runtime = mode === "claude-code" ? this.opts.runtimes.host : this.opts.runtimes.simulated;
-    if (!runtime) throw new CompanyError(400, "Claude Code mode is not available.");
-    this.reset();
-    this.runtime = runtime;
-    this.demo = { running: true, mode, brief, startedAt: (/* @__PURE__ */ new Date()).toISOString(), finishedAt: null };
-    this.opts.bus.emit({ type: "demo.started", mode, brief });
-    this.deliver(OWNER_ID, "ceo", brief);
-    this.deliver("system", "hr", hrOnboardingMessage(this.opts.config.companyName));
-    this.scheduleSoon();
+    const id = randomBytes(3).toString("hex");
+    const title = titleFromBrief(brief);
+    const workspaceDir = path.join(this.opts.projectsDir, `${slugify(title)}-${id}`);
+    mkdirSync(workspaceDir, { recursive: true });
+    this.project = { id, title, brief, phase: "planning", workspaceDir, startedAt: now(), prd: [] };
+    this.tasks = [];
+    this.proposals = [];
+    this.metrics = emptyMetrics();
+    this.activationsThisProject = 0;
+    this.limitNoticeSent = false;
+    this.limitNoticed.clear();
+    this.nextTaskId = 1;
+    this.opts.bus.emit({ type: "project.started", projectId: id, title });
+    this.post("system", "#general", `New project: \u201C${title}\u201D. The CEO has the Owner\u2019s brief.`);
+    this.deliver(OWNER_ID, ceo.data.id, brief, "brief");
+    this.changed();
+    return structuredClone(this.project);
   }
-  /** Stops everything and brings back a fresh founding team. */
+  /** The Owner talks to the CEO (dashboard or /olympus:tell). */
+  ownerMessage(text) {
+    const ceo = this.activeInRole("ceo");
+    if (!ceo) throw new CompanyError(409, "There is no CEO to talk to. Hire a CEO first.");
+    this.deliver(OWNER_ID, ceo.data.id, text, "owner");
+    this.changed();
+  }
+  decidePrd(decision, comment) {
+    const project = this.project;
+    const latest = project?.prd.at(-1);
+    if (!project || !latest) throw new CompanyError(409, "There is no PRD to decide on yet.");
+    if (latest.status !== "pending") {
+      throw new CompanyError(409, `PRD v${latest.version} is already ${latest.status.replace("_", " ")}.`);
+    }
+    if (decision === "changes" && !comment?.trim()) {
+      throw new CompanyError(400, "Say what should change, so the CEO can revise the PRD.");
+    }
+    latest.status = decision === "approve" ? "approved" : "changes_requested";
+    latest.ownerComment = comment?.trim() || null;
+    latest.decidedAt = now();
+    this.setPhase(decision === "approve" ? "approved" : "planning");
+    this.opts.bus.emit({
+      type: "prd.decided",
+      version: latest.version,
+      decision: latest.status,
+      comment: latest.ownerComment
+    });
+    const ceo = this.activeInRole("ceo");
+    if (!ceo) {
+      this.notice("warning", "Decision recorded, but there is no CEO to act on it. Hire a CEO.");
+    } else if (decision === "approve") {
+      this.deliver(
+        "system",
+        ceo.data.id,
+        `The Owner approved PRD v${latest.version} \u201C${latest.title}\u201D.${latest.ownerComment ? ` Owner\u2019s note: ${latest.ownerComment}` : ""}
+Next: ask HR (id "hr") to hire the proposed team with hire_team. Once they are hired, hand the PRD to the Tech Lead (or the CTO) to break it into tasks. If the team has no Tech Lead or CTO, create and assign the tasks yourself with create_task.`,
+        "prd_approved"
+      );
+    } else {
+      this.deliver(
+        "system",
+        ceo.data.id,
+        `The Owner asked for changes to PRD v${latest.version} \u201C${latest.title}\u201D:
+${latest.ownerComment}
+Revise the PRD to address every point and submit it again with submit_prd.`,
+        "prd_changes"
+      );
+    }
+    this.changed();
+  }
+  /** The Owner hires someone directly (any role). CEO, HR and CTO have one seat each. */
+  ownerHire(roleId, name, level) {
+    const role = roleById(roleId);
+    if (!role) throw new CompanyError(400, `Unknown role "${roleId}". Roles: ${ORG_ROLES.map((r) => r.id).join(", ")}.`);
+    const existing = this.activeInRole(roleId);
+    if (existing && SINGLE_SEAT_ROLES.has(roleId)) {
+      throw new CompanyError(409, `${existing.data.name} is already the ${role.title}. Fire them first to hire someone new.`);
+    }
+    if (level && !LEVELS.includes(level)) throw new CompanyError(400, `Level must be one of ${LEVELS.join(", ")}.`);
+    const member = this.hire(roleId, name?.trim() || this.freshName(), level ?? null, "owner");
+    if (this.project && this.project.phase !== "done" && ["ceo", "hr", "cto", "tech-lead"].includes(roleId)) {
+      this.deliver(
+        "system",
+        member.data.id,
+        `You just joined as ${role.title}, hired by the Owner in the middle of the project \u201C${this.project.title}\u201D. Read get_project and list_tasks, check in with your team, and carry the work forward.`,
+        "onboarding"
+      );
+    }
+    this.changed();
+    return { ...member.data, managerId: this.managerOf(member.data) };
+  }
+  fire(employeeId, reason) {
+    const member = this.members.get(employeeId);
+    if (!member) throw new CompanyError(404, `No employee with id "${employeeId}".`);
+    if (member.data.status === "fired") throw new CompanyError(409, `${member.data.name} has already left the company.`);
+    const wasWorking = member.controller !== null;
+    member.inbox = [];
+    member.data.status = "fired";
+    member.data.firedReason = reason;
+    member.data.firedAt = now();
+    member.data.activity = "Left the company";
+    member.controller?.abort();
+    this.opts.bus.emit({ type: "employee.fired", employeeId, reason });
+    this.opts.bus.emit({ type: "employee.status_changed", employeeId, status: "fired", activity: member.data.activity });
+    this.post("system", "#general", `${member.data.name} (${member.data.title}) has left the company${wasWorking ? " mid-task" : ""}. Reason: ${reason}`);
+    const orphaned = this.tasks.filter((t) => t.assigneeId === employeeId && t.status !== "done");
+    for (const task of orphaned) {
+      task.assigneeId = null;
+      task.status = "todo";
+      task.updatedAt = now();
+      task.notes.push({ ts: now(), by: "system", text: `${member.data.name} left; task unassigned.`, status: "todo" });
+      this.opts.bus.emit({ type: "task.updated", taskId: task.id, status: "todo", by: "system", note: "unassigned" });
+    }
+    const lead = this.workLead();
+    if (orphaned.length > 0 && lead) {
+      this.deliver(
+        "system",
+        lead.data.id,
+        `${member.data.name} left the company. These tasks are unassigned and back to todo: ${orphaned.map((t) => t.id).join(", ")}. Reassign them with update_task (assignee), or ask HR to hire a replacement.`,
+        "task_update"
+      );
+    }
+    this.changed();
+  }
+  updateSettings(patch) {
+    const next = { ...this.settings, ...patch };
+    if (next.mode !== "claude-code" && next.mode !== "simulated") throw new CompanyError(400, "Mode must be claude-code or simulated.");
+    for (const key of ["maxConcurrency", "maxActivationsPerEmployee", "maxActivationsPerProject"]) {
+      if (!Number.isInteger(next[key]) || next[key] < 1 || next[key] > 500) {
+        throw new CompanyError(400, `${key} must be a whole number from 1 to 500.`);
+      }
+    }
+    this.settings = next;
+    this.limitNoticeSent = false;
+    this.limitNoticed.clear();
+    this.opts.bus.emit({ type: "settings.updated", settings: { ...next } });
+    this.scheduleSoon();
+    this.changed();
+    return { ...next };
+  }
+  /** Back to day one: only the founding CEO and HR, no project. Settings are kept. */
   reset() {
     this.generation++;
     for (const member of this.members.values()) member.controller?.abort();
     this.members.clear();
     this.messages = [];
     this.proposals = [];
+    this.project = null;
+    this.tasks = [];
+    this.metrics = emptyMetrics();
     this.nextMessageId = 1;
-    this.activationsThisRun = 0;
-    this.runLimitNoticeSent = false;
-    this.demo = idleDemo();
-    this.runtime = null;
-    this.hireFoundingTeam();
+    this.nextTaskId = 1;
+    this.activationsThisProject = 0;
+    this.limitNoticeSent = false;
+    this.hireFounders();
     this.opts.bus.emit({ type: "company.reset" });
+    this.changed();
   }
-  fire(employeeId, reason) {
-    const member = this.members.get(employeeId);
-    if (!member) throw new CompanyError(404, `No employee with id "${employeeId}".`);
-    if (member.data.status === "fired") {
-      throw new CompanyError(409, `${member.data.name} has already left the company.`);
-    }
-    const wasWorking = member.controller !== null;
-    member.inbox = [];
-    member.data.status = "fired";
-    member.data.firedReason = reason;
-    member.data.activity = "Left the company";
-    member.controller?.abort();
-    this.opts.bus.emit({ type: "employee.fired", employeeId, reason });
-    this.opts.bus.emit({ type: "employee.status_changed", employeeId, status: "fired", activity: member.data.activity });
-    this.post(
-      "system",
-      "#general",
-      `${member.data.name} (${member.data.title}) has left the company${wasWorking ? " mid-task" : ""}. Reason: ${reason}`
-    );
-    this.scheduleSoon();
-  }
-  /** The Claude Code session asks for work (/olympus:brief and /olympus:run call this in a loop). */
+  // ───────────────────────────── Claude Code host loop ─────────────────────────────
   hostClaim() {
     const host = this.opts.runtimes.host;
-    if (!host) return { status: "no_run", message: "Claude Code mode is not available." };
-    if (this.demo.mode !== "claude-code") {
-      return { status: "no_run", message: "No Claude Code run is in progress. Start one with /olympus:brief <what to build>." };
+    if (!host || this.settings.mode !== "claude-code") {
+      return { status: "no_run", message: "Olympus is in simulated mode. Switch Settings \u2192 Runtime to Claude Code to run real agents." };
     }
     const activations = host.claim();
     if (activations.length > 0) {
@@ -53437,15 +53644,36 @@ var Company = class {
         message: `${running} activation(s) are still running. When each agent returns, call activation_done for it, then call next_work again.`
       };
     }
-    if (!this.demo.running) {
-      const ownerMessages = this.messages.filter((m) => m.to === OWNER_ID && m.from !== "system").map((m) => `${this.labelFor(m.from)}: ${m.text}`);
+    if (this.isBusy()) return { status: "busy", running: 0, message: "The company is between steps. Call next_work again." };
+    const paused = this.pausedByLimits();
+    if (paused.length > 0) {
       return {
         status: "finished",
-        message: "The run is finished: nobody has unread work. Tell the Owner what the CEO reported.",
+        waitingFor: null,
+        message: `Paused: ${paused.map((m) => m.data.name).join(", ")} still have unread work, but the agent-run limits are reached. Tell the Owner to raise them in Settings on the dashboard, then run /olympus:run.`,
+        ownerMessages: []
+      };
+    }
+    if (!this.project) {
+      return { status: "no_run", message: "There is no project yet. Start one with /olympus:brief <what to build>." };
+    }
+    const latest = this.project.prd.at(-1);
+    const since = this.project.startedAt;
+    const ownerMessages = this.messages.filter((m) => m.to === OWNER_ID && m.ts >= since).slice(-6).map((m) => `${this.labelFor(m.from)}: ${m.text}`);
+    if (latest?.status === "pending") {
+      return {
+        status: "finished",
+        waitingFor: "owner_prd",
+        message: `PRD v${latest.version} \u201C${latest.title}\u201D is waiting for the Owner. They can read it on the dashboard (Project) or with /olympus:prd, then approve with /olympus:approve or ask for changes with /olympus:changes <what to change>.`,
         ownerMessages
       };
     }
-    return { status: "busy", running: 0, message: "The company is between steps. Call next_work again." };
+    return {
+      status: "finished",
+      waitingFor: null,
+      message: this.project.phase === "done" ? "The project is done: every task is complete. Tell the Owner what the CEO reported." : "Nobody has unread work right now. Tell the Owner what the CEO reported.",
+      ownerMessages
+    };
   }
   hostDone(activationId, report) {
     return this.opts.runtimes.host?.done(activationId, report) ?? false;
@@ -53455,56 +53683,319 @@ var Company = class {
     if (!host) return { ok: false, text: "Claude Code mode is not available." };
     return host.tool(activationId, tool, input2);
   }
-  /** Stops all running activations, for shutdown. */
+  /** Stops all running activations and writes state, for shutdown. */
   shutdown() {
     this.generation++;
     for (const member of this.members.values()) member.controller?.abort();
+    this.saveNow();
   }
-  hireFoundingTeam() {
-    const { models } = this.opts.config;
-    for (const founder of FOUNDING_TEAM) {
-      const role = roleById(founder.roleId);
-      this.members.set(founder.id, {
-        data: {
-          id: founder.id,
-          name: founder.name,
-          roleId: role.id,
-          title: role.title,
-          managerId: founder.managerId,
-          model: models[founder.id].model,
-          effort: models[founder.id].effort,
-          status: "idle",
-          activity: "Waiting for work",
-          activations: 0,
-          lastDurationMs: null
-        },
-        inbox: [],
-        controller: null,
-        runActivations: 0
-      });
+  // ───────────────────────────── employee tools ─────────────────────────────
+  callTool(employeeId, tool, input2) {
+    const me = this.members.get(employeeId);
+    if (!me || me.data.status === "fired") return { ok: false, text: "You no longer work here. Stop now." };
+    const str = (key, max = 4e3) => typeof input2[key] === "string" ? input2[key].trim().slice(0, max) : "";
+    const role = me.data.roleId;
+    switch (tool) {
+      case "post_message":
+        return this.post(employeeId, str("to", 64), str("text", 4e3));
+      case "report_status": {
+        const summary = str("summary", 160);
+        this.setStatus(me, me.data.status, summary || me.data.activity);
+        return { ok: true, text: "Status updated." };
+      }
+      case "list_team": {
+        const roles = ORG_ROLES.filter((r) => !FOUNDING_ROLE_IDS.has(r.id)).map((r) => `- ${r.id}: ${r.title} (reports to ${r.reportsTo ?? "the Owner"})`).join("\n");
+        const proposals = this.proposals.length ? `
+
+Proposed hires (not hired yet):
+${this.proposals.map((p) => `- ${p.id}: ${p.name}, ${p.roleId} (${p.level})`).join("\n")}` : "";
+        return { ok: true, text: `Team:
+${this.roster()}${proposals}
+
+Roles in the company (role id: title):
+${roles}` };
+      }
+      case "get_project": {
+        const p = this.project;
+        if (!p) return { ok: true, text: "There is no project yet." };
+        const approved = [...p.prd].reverse().find((v) => v.status === "approved");
+        const latest = p.prd.at(-1);
+        const shown = approved ?? latest;
+        const prdText = shown ? `PRD v${shown.version} \u201C${shown.title}\u201D (${shown.status.replace("_", " ")})${shown.ownerComment ? `
+Owner\u2019s note: ${shown.ownerComment}` : ""}
+
+${shown.markdown}` : "No PRD yet.";
+        return {
+          ok: true,
+          text: `Project: ${p.title}
+Brief: ${p.brief}
+Phase: ${p.phase}
+Project folder: ${p.workspaceDir}
+Tasks: ${this.taskSummary()}
+
+${prdText}`
+        };
+      }
+      case "list_tasks":
+        return { ok: true, text: this.tasks.length ? this.tasks.map((t) => this.taskLine(t)).join("\n") : "No tasks yet." };
+      case "submit_prd": {
+        if (role !== "ceo") return { ok: false, text: "Only the CEO submits the PRD." };
+        const p = this.project;
+        if (!p) return { ok: false, text: "There is no project yet." };
+        const title = str("title", 120);
+        const markdown = typeof input2.markdown === "string" ? input2.markdown.trim() : "";
+        if (!title || markdown.length < 40) return { ok: false, text: "Give the PRD a title and full Markdown content." };
+        if (markdown.length > 4e4) return { ok: false, text: "The PRD is too long (max 40,000 characters)." };
+        for (const v of p.prd) if (v.status === "pending") v.status = "superseded";
+        const version2 = p.prd.length + 1;
+        p.prd.push({
+          version: version2,
+          title,
+          markdown,
+          submittedBy: employeeId,
+          submittedAt: now(),
+          status: "pending",
+          ownerComment: null,
+          decidedAt: null
+        });
+        this.setPhase("prd_review");
+        this.opts.bus.emit({ type: "prd.submitted", version: version2, title, by: employeeId });
+        this.post("system", OWNER_ID, `PRD v${version2} \u201C${title}\u201D is ready for your approval. Open Project on the dashboard, or run /olympus:prd in Claude Code.`);
+        this.changed();
+        return {
+          ok: true,
+          text: `Submitted PRD v${version2}. Nobody can be hired and no tasks can start until the Owner approves it. Tell the Owner it's ready, then end your turn.`
+        };
+      }
+      case "propose_team":
+        return this.proposeTeam(me, input2.hires);
+      case "hire_team": {
+        if (role !== "hr") return { ok: false, text: "Only HR hires." };
+        if (!this.prdApproved()) {
+          return { ok: false, text: "You can hire only after the Owner approves the PRD. Wait for the CEO to tell you it was approved." };
+        }
+        const wanted = Array.isArray(input2.proposal_ids) ? input2.proposal_ids.map(String) : null;
+        const picked = this.proposals.filter((p) => !wanted || wanted.includes(p.id));
+        if (picked.length === 0) return { ok: false, text: "No matching proposed hires. Call list_team to see the proposal ids." };
+        const hired = picked.map((p) => this.hire(p.roleId, p.name, p.level, employeeId));
+        this.proposals = this.proposals.filter((p) => !picked.includes(p));
+        this.opts.bus.emit({ type: "team.proposed", employeeId, count: this.proposals.length });
+        this.changed();
+        return {
+          ok: true,
+          text: `Hired ${hired.length}:
+${hired.map((m) => `- ${m.data.name}, ${m.data.title}: id "${m.data.id}", reports to ${this.nameOf(this.managerOf(m.data))}`).join("\n")}`
+        };
+      }
+      case "create_task": {
+        if (!TASK_LEAD_ROLES.has(role)) return { ok: false, text: "Only the CEO, CTO, Tech Lead or Architect create tasks." };
+        if (!this.project) return { ok: false, text: "There is no project yet." };
+        if (!this.prdApproved()) return { ok: false, text: "Tasks can start only after the Owner approves the PRD." };
+        const title = str("title", 120);
+        const description = str("description", 4e3);
+        const assigneeId = str("assignee", 64);
+        if (!title) return { ok: false, text: "Give the task a title." };
+        const assignee = this.members.get(assigneeId);
+        if (!assignee || assignee.data.status === "fired") {
+          return { ok: false, text: `No active employee with id "${assigneeId}". Call list_team to see ids.` };
+        }
+        const task = {
+          id: `T-${this.nextTaskId++}`,
+          title,
+          description,
+          assigneeId,
+          status: "todo",
+          createdBy: employeeId,
+          createdAt: now(),
+          updatedAt: now(),
+          notes: []
+        };
+        this.tasks.push(task);
+        if (this.project.phase === "approved") this.setPhase("building");
+        this.opts.bus.emit({ type: "task.created", taskId: task.id, title, assigneeId, by: employeeId });
+        if (assigneeId !== employeeId) {
+          this.deliver(
+            "system",
+            assigneeId,
+            `New task ${task.id} from ${me.data.name}: ${title}
+${description}
+Move it to in_progress when you start and to done when it is finished (or blocked, with the reason), using update_task.`,
+            "task",
+            employeeId
+          );
+        }
+        this.changed();
+        return { ok: true, text: `Created ${task.id} for ${assignee.data.name}.` };
+      }
+      case "update_task": {
+        const task = this.tasks.find((t) => t.id === str("task_id", 16));
+        if (!task) return { ok: false, text: `No task "${str("task_id", 16)}". Call list_tasks.` };
+        const isLead = TASK_LEAD_ROLES.has(role);
+        if (task.assigneeId !== employeeId && !isLead) return { ok: false, text: `${task.id} is not your task.` };
+        const status = str("status", 16);
+        if (!TASK_STATUSES.includes(status)) return { ok: false, text: `Status must be one of ${TASK_STATUSES.join(", ")}.` };
+        const newAssignee = str("assignee", 64);
+        if (newAssignee) {
+          if (!isLead) return { ok: false, text: "Only a lead can reassign a task." };
+          const target = this.members.get(newAssignee);
+          if (!target || target.data.status === "fired") return { ok: false, text: `No active employee with id "${newAssignee}".` };
+          task.assigneeId = newAssignee;
+          if (newAssignee !== employeeId) {
+            this.deliver("system", newAssignee, `${me.data.name} assigned you ${task.id}: ${task.title}
+${task.description}`, "task", employeeId);
+          }
+        }
+        const note = str("note", 1e3) || null;
+        const wasDone = task.status === "done";
+        task.status = status;
+        task.updatedAt = now();
+        task.notes.push({ ts: now(), by: employeeId, text: note ?? `moved to ${status}`, status });
+        if (status === "done" && !wasDone) this.metrics.tasksDone.push(now());
+        this.opts.bus.emit({ type: "task.updated", taskId: task.id, status, by: employeeId, note });
+        const allDone = this.tasks.length > 0 && this.tasks.every((t) => t.status === "done");
+        if (allDone && this.project) this.setPhase("done");
+        else if (this.project?.phase === "done") this.setPhase("building");
+        const lead = this.workLead();
+        const worthTelling = status === "done" || status === "blocked" || status === "review" || Boolean(newAssignee);
+        if (lead && lead.data.id !== employeeId && worthTelling) {
+          this.deliver(
+            "system",
+            lead.data.id,
+            `${task.id} \u201C${task.title}\u201D is now ${status} (by ${me.data.name})${note ? `: ${note}` : "."}
+Board: ${this.taskSummary()}.${allDone ? "\nAll tasks are done. Check the work, then report to the CEO (or to the Owner if you are the CEO)." : ""}`,
+            "task_update",
+            employeeId
+          );
+        }
+        this.changed();
+        return { ok: true, text: `${task.id} is now ${status}. Board: ${this.taskSummary()}.` };
+      }
+      default:
+        return { ok: false, text: `Unknown company tool "${tool}".` };
     }
   }
-  roster() {
-    return [...this.members.values()].map((m) => {
-      const manager = m.data.managerId ? this.members.get(m.data.managerId)?.data.name : "the Owner";
-      const left = m.data.status === "fired" ? " (no longer works here)" : "";
-      return `- ${m.data.name}, ${m.data.title}: id "${m.data.id}", reports to ${manager}${left}`;
-    }).join("\n");
+  proposeTeam(me, rawHires) {
+    if (me.data.roleId !== "hr") return { ok: false, text: "Only HR can propose hires." };
+    const hires = Array.isArray(rawHires) ? rawHires : [];
+    if (hires.length === 0) return { ok: false, text: "Propose at least one hire." };
+    if (hires.length > MAX_PROPOSED_HIRES) return { ok: false, text: `Propose at most ${MAX_PROPOSED_HIRES} hires.` };
+    const validRoles = ORG_ROLES.filter((r) => !FOUNDING_ROLE_IDS.has(r.id)).map((r) => r.id);
+    const proposals = [];
+    for (const [i, hire] of hires.entries()) {
+      const role = typeof hire?.role === "string" ? roleById(hire.role) : void 0;
+      if (!role || FOUNDING_ROLE_IDS.has(role.id)) {
+        return { ok: false, text: `Hire ${i + 1}: unknown role "${String(hire?.role)}". Valid roles: ${validRoles.join(", ")}.` };
+      }
+      const level = hire.level;
+      if (!LEVELS.includes(level)) return { ok: false, text: `Hire ${i + 1}: level must be one of ${LEVELS.join(", ")}.` };
+      const name = String(hire.name ?? "").trim();
+      if (name.length < 2 || name.length > 60) return { ok: false, text: `Hire ${i + 1}: give a name (2\u201360 characters).` };
+      proposals.push({
+        id: `p${i + 1}`,
+        roleId: role.id,
+        name,
+        level,
+        model: modelFor(role, level),
+        reason: String(hire.reason ?? "").trim().slice(0, 200),
+        proposedBy: me.data.id,
+        ts: now()
+      });
+    }
+    this.proposals = proposals;
+    this.opts.bus.emit({ type: "team.proposed", employeeId: me.data.id, count: proposals.length });
+    this.changed();
+    return {
+      ok: true,
+      text: `Recorded ${proposals.length} proposed hires (ids ${proposals.map((p) => p.id).join(", ")}). The Owner sees them on the dashboard. Nobody is hired until the Owner approves the PRD; then hire them with hire_team.`
+    };
   }
-  /** A direct message into an employee's inbox, from the Owner or the system. */
-  deliver(from, to, text) {
-    const result = this.post(from, to, text);
+  // ───────────────────────────── people ─────────────────────────────
+  hireFounders() {
+    for (const founder of FOUNDING_TEAM) this.hire(founder.roleId, founder.name, null, "founding", founder.id);
+  }
+  hire(roleId, name, level, by, forcedId) {
+    const role = roleById(roleId);
+    const id = forcedId ?? this.freshId(roleId);
+    const member = {
+      data: {
+        id,
+        name,
+        roleId,
+        title: role.title,
+        level,
+        managerId: null,
+        model: modelFor(role, level ?? "sde2"),
+        effort: effortFor(roleId),
+        status: "idle",
+        activity: "Waiting for work",
+        activations: 0,
+        lastDurationMs: null,
+        hiredAt: now(),
+        hiredBy: by
+      },
+      inbox: [],
+      controller: null,
+      projectActivations: 0
+    };
+    this.members.set(id, member);
+    this.opts.bus.emit({ type: "employee.hired", employeeId: id, by });
+    if (by !== "founding") {
+      const manager = this.nameOf(this.managerOf(member.data));
+      this.post("system", "#general", `Welcome ${name}, our new ${role.title}${level ? ` (${level.toUpperCase()})` : ""}. Reports to ${manager}.`);
+    }
+    return member;
+  }
+  freshId(roleId) {
+    if (!this.members.has(roleId)) return roleId;
+    for (let n = 2; ; n++) if (!this.members.has(`${roleId}-${n}`)) return `${roleId}-${n}`;
+  }
+  freshName() {
+    const used = new Set([...this.members.values()].map((m) => m.data.name));
+    return PERSONA_NAMES.find((n) => !used.has(n)) ?? `Employee ${this.members.size + 1}`;
+  }
+  activeInRole(roleId) {
+    return [...this.members.values()].filter((m) => m.data.roleId === roleId && m.data.status !== "fired").sort((a, b) => a.data.hiredAt.localeCompare(b.data.hiredAt))[0];
+  }
+  /** The nearest role up the org structure that has someone in it. null = the Owner. */
+  managerOf(employee) {
+    let parent = roleById(employee.roleId)?.reportsTo ?? null;
+    while (parent) {
+      const boss = this.activeInRole(parent);
+      if (boss && boss.data.id !== employee.id) return boss.data.id;
+      parent = roleById(parent)?.reportsTo ?? null;
+    }
+    return null;
+  }
+  /** Who monitors the task board: the Tech Lead, else the CTO, else the CEO. */
+  workLead() {
+    for (const roleId of WORK_LEAD_ROLES) {
+      const member = this.activeInRole(roleId);
+      if (member) return member;
+    }
+    return void 0;
+  }
+  roster() {
+    return [...this.members.values()].filter((m) => m.data.status !== "fired").map((m) => `- ${m.data.name}, ${m.data.title}: id "${m.data.id}", reports to ${this.nameOf(this.managerOf(m.data))}`).join("\n");
+  }
+  nameOf(id) {
+    if (!id) return "the Owner";
+    return this.members.get(id)?.data.name ?? id;
+  }
+  // ───────────────────────────── messages ─────────────────────────────
+  deliver(from, to, text, kind, causedBy) {
+    const result = this.post(from, to, text, kind, causedBy);
     if (!result.ok) throw new CompanyError(400, result.text);
   }
   /** Posts a message. Checks every rule here, so agents can't skip them. */
-  post(from, to, rawText) {
+  post(from, to, rawText, kind = "dm", causedBy) {
     const text = rawText.trim();
     if (!text) return { ok: false, text: "The message is empty." };
-    if (text.length > 4e3) return { ok: false, text: "The message is too long (max 4000 characters)." };
+    if (text.length > 6e3) return { ok: false, text: "The message is too long (max 6000 characters)." };
     let recipient = null;
     let label;
     if (to === OWNER_ID) {
-      if (from !== "ceo" && from !== "system") {
+      const sender = from === "system" || from === OWNER_ID ? null : this.members.get(from);
+      if (sender && sender.data.roleId !== "ceo") {
         return { ok: false, text: 'Only the CEO messages the Owner. Send this to the CEO ("ceo") instead.' };
       }
       label = "the Owner";
@@ -53520,80 +54011,28 @@ var Company = class {
       if (recipient.data.status === "fired") return { ok: false, text: `${recipient.data.name} no longer works here.` };
       label = recipient.data.name;
     }
-    const message = { id: this.nextMessageId++, ts: (/* @__PURE__ */ new Date()).toISOString(), from, to, text };
+    const message = { id: this.nextMessageId++, ts: now(), from, to, text };
     this.messages.push(message);
-    if (this.messages.length > MAX_MESSAGES_IN_STATE * 2) this.messages = this.messages.slice(-MAX_MESSAGES_IN_STATE);
+    if (this.messages.length > MAX_MESSAGES) this.messages = this.messages.slice(-MAX_MESSAGES);
+    this.metrics.messages.push(message.ts);
     this.opts.bus.emit({ type: "message.posted", message });
     if (recipient) {
-      recipient.inbox.push({ from, fromLabel: this.labelFor(from), text, ts: message.ts });
+      recipient.inbox.push({ from, fromLabel: this.labelFor(from), kind, text, ts: message.ts, ...causedBy ? { causedBy } : {} });
       if (!recipient.controller) this.setStatus(recipient, "queued", "New message waiting");
       this.scheduleSoon();
     }
+    this.changed();
     return { ok: true, text: `Delivered to ${label}.` };
   }
-  proposeTeam(from, hires) {
+  labelFor(from) {
+    if (from === OWNER_ID) return "the Owner";
+    if (from === "system") return "the company system";
     const member = this.members.get(from);
-    if (member?.data.roleId !== "hr") return { ok: false, text: "Only HR can propose hires." };
-    if (!Array.isArray(hires) || hires.length === 0) return { ok: false, text: "Propose at least one hire." };
-    if (hires.length > MAX_PROPOSED_HIRES) return { ok: false, text: `Propose at most ${MAX_PROPOSED_HIRES} hires.` };
-    const validRoles = ORG_ROLES.filter((r) => !FOUNDING_ROLE_IDS.has(r.id)).map((r) => r.id);
-    const proposals = [];
-    for (const [i, hire] of hires.entries()) {
-      const role = typeof hire?.role === "string" ? roleById(hire.role) : void 0;
-      if (!role || FOUNDING_ROLE_IDS.has(role.id)) {
-        return { ok: false, text: `Hire ${i + 1}: unknown role "${String(hire?.role)}". Valid roles: ${validRoles.join(", ")}.` };
-      }
-      if (!LEVELS.includes(hire.level)) {
-        return { ok: false, text: `Hire ${i + 1}: level must be one of ${LEVELS.join(", ")}.` };
-      }
-      const name = String(hire.name ?? "").trim();
-      if (name.length < 2 || name.length > 60) return { ok: false, text: `Hire ${i + 1}: give a name (2\u201360 characters).` };
-      proposals.push({
-        id: `p${i + 1}`,
-        roleId: role.id,
-        name,
-        level: hire.level,
-        model: modelFor(role, hire.level),
-        reason: String(hire.reason ?? "").trim().slice(0, 200),
-        proposedBy: from,
-        ts: (/* @__PURE__ */ new Date()).toISOString()
-      });
-    }
-    this.proposals = proposals;
-    this.opts.bus.emit({ type: "team.proposed", employeeId: from, count: proposals.length });
-    return {
-      ok: true,
-      text: `Recorded ${proposals.length} proposed hires. They appear on the Owner's org chart as "Proposed" under their managers. Nobody is hired until the Owner approves the PRD.`
-    };
+    return member ? `${member.data.name} (${member.data.title}, id "${member.data.id}")` : from;
   }
-  toolsFor(employeeId, generation) {
-    const guard = () => {
-      const member = this.members.get(employeeId);
-      if (generation !== this.generation || !member) return { ok: false, text: "This run has ended." };
-      if (member.data.status === "fired") return { ok: false, text: "You no longer work here. Stop now." };
-      return null;
-    };
-    return {
-      postMessage: (to, text) => guard() ?? this.post(employeeId, to.trim(), text),
-      reportStatus: (summary) => {
-        const blocked = guard();
-        if (blocked) return blocked;
-        const member = this.members.get(employeeId);
-        this.setStatus(member, member.data.status, summary.trim().slice(0, 160) || member.data.activity);
-        return { ok: true, text: "Status updated." };
-      },
-      listTeam: () => {
-        const blocked = guard();
-        if (blocked) return blocked;
-        const roles = ORG_ROLES.filter((r) => !FOUNDING_ROLE_IDS.has(r.id)).map((r) => `- ${r.id}: ${r.title}, reports to ${r.reportsTo ?? "the Owner"}`).join("\n");
-        return { ok: true, text: `Team:
-${this.roster()}
-
-Roles HR can propose (role id: title):
-${roles}` };
-      },
-      proposeTeam: (hires) => guard() ?? this.proposeTeam(employeeId, hires)
-    };
+  // ───────────────────────────── scheduling ─────────────────────────────
+  runtime() {
+    return this.settings.mode === "claude-code" ? this.opts.runtimes.host : this.opts.runtimes.simulated;
   }
   scheduleSoon() {
     if (this.scheduleQueued) return;
@@ -53604,62 +54043,70 @@ ${roles}` };
     });
   }
   schedule() {
-    if (!this.demo.running || !this.runtime) return;
-    const { maxConcurrency, maxActivationsPerEmployee, maxActivationsPerRun } = this.opts.config;
+    const runtime = this.runtime();
+    if (!runtime) return;
+    const { maxConcurrency, maxActivationsPerEmployee, maxActivationsPerProject } = this.settings;
     for (const member of this.members.values()) {
       if (member.data.status === "fired" || member.controller || member.inbox.length === 0) continue;
+      if (this.waitingOnSender(member)) continue;
       if (this.runningCount() >= maxConcurrency) break;
-      if (this.activationsThisRun >= maxActivationsPerRun) {
-        if (!this.runLimitNoticeSent) {
-          this.runLimitNoticeSent = true;
-          this.notice("warning", `This run reached its limit of ${maxActivationsPerRun} agent runs. No new activations will start.`);
+      if (this.activationsThisProject >= maxActivationsPerProject) {
+        if (!this.limitNoticeSent) {
+          this.limitNoticeSent = true;
+          this.notice("warning", `This project reached its limit of ${maxActivationsPerProject} agent runs. Raise it in Settings to continue.`);
         }
-        this.dropInbox(member, "Paused: run limit reached");
+        this.setStatus(member, "queued", "Paused: project agent-run limit reached");
         continue;
       }
-      if (member.runActivations >= maxActivationsPerEmployee) {
-        this.notice(
-          "warning",
-          `${member.data.name} reached the limit of ${maxActivationsPerEmployee} activations per run. ${member.inbox.length} message(s) left unread.`
-        );
-        this.dropInbox(member, "Activation limit reached");
+      if (member.projectActivations >= maxActivationsPerEmployee) {
+        if (!this.limitNoticed.has(member.data.id)) {
+          this.limitNoticed.add(member.data.id);
+          this.notice("warning", `${member.data.name} reached the limit of ${maxActivationsPerEmployee} agent runs for this project. Raise it in Settings to continue.`);
+        }
+        this.setStatus(member, "queued", "Paused: personal agent-run limit reached");
         continue;
       }
-      void this.activate(member);
+      void this.activate(member, runtime);
     }
-    this.finishIfQuiet();
+    this.changed();
   }
-  async activate(member) {
-    const runtime = this.runtime;
-    if (!runtime) return;
+  async activate(member, runtime) {
     const generation = this.generation;
     const employeeId = member.data.id;
     const inbox = member.inbox.splice(0);
     const controller = new AbortController();
     const activationId = `a_${randomBytes(6).toString("hex")}`;
     member.controller = controller;
-    member.runActivations++;
+    member.projectActivations++;
     member.data.activations++;
-    this.activationsThisRun++;
+    this.activationsThisProject++;
+    this.metrics.activations.push(now());
     const trigger = describeTrigger(inbox);
-    const waitingForHost = runtime.mode === "claude-code";
-    this.setStatus(member, "working", waitingForHost ? `Waiting for Claude Code to pick up ${trigger}` : `Reading ${trigger}`);
+    this.setStatus(
+      member,
+      "working",
+      runtime.mode === "claude-code" ? `Waiting for Claude Code to pick up ${trigger}` : `Reading ${trigger}`
+    );
     this.opts.bus.emit({ type: "activation.started", employeeId, activationId, trigger });
     const firstName = member.data.name.split(" ")[0] ?? member.data.name;
+    const myTasks = this.tasks.filter((t) => t.assigneeId === employeeId && t.status !== "done");
     let result;
     try {
       result = await runtime.run({
         activationId,
-        employee: { ...member.data },
+        employee: { ...member.data, managerId: this.managerOf(member.data) },
         agentType: agentTypeFor(member.data.roleId),
         description: `${firstName} (${member.data.title}): ${trigger}`,
         prompt: activationPrompt({
-          companyName: this.opts.config.companyName,
+          companyName: this.opts.companyName,
           name: member.data.name,
           title: member.data.title,
           employeeId,
           activationId,
           roster: this.roster(),
+          project: this.project,
+          isBuilder: BUILDER_ROLES.has(member.data.roleId),
+          myTasks,
           inbox
         }),
         inbox,
@@ -53688,8 +54135,8 @@ ${roles}` };
     member.data.lastDurationMs = result.durationMs;
     if (result.requeue && member.data.status !== "fired") {
       member.inbox.unshift(...inbox);
-      member.runActivations--;
-      this.activationsThisRun--;
+      member.projectActivations--;
+      this.activationsThisProject--;
     }
     this.opts.bus.emit({
       type: "activation.completed",
@@ -53699,27 +54146,67 @@ ${roles}` };
       durationMs: result.durationMs,
       ...result.detail ? { detail: result.detail } : {}
     });
-    if (result.outcome === "error") {
-      this.notice("error", `${member.data.name}'s run failed: ${result.detail ?? "unknown error"}`);
-    }
+    if (result.outcome === "error") this.notice("error", `${member.data.name}'s run failed: ${result.detail ?? "unknown error"}`);
     if (member.data.status !== "fired") {
       const activity = result.outcome === "success" ? "Done, waiting for messages" : `Stopped (${result.outcome})`;
       this.setStatus(member, member.inbox.length > 0 ? "queued" : "idle", activity);
     }
     this.scheduleSoon();
   }
-  finishIfQuiet() {
-    if (!this.demo.running) return;
-    const busy = [...this.members.values()].some(
-      (m) => m.controller !== null || m.data.status !== "fired" && m.inbox.length > 0
-    );
-    if (busy) return;
-    this.demo = { ...this.demo, running: false, finishedAt: (/* @__PURE__ */ new Date()).toISOString() };
-    this.opts.bus.emit({ type: "demo.finished", activations: this.activationsThisRun });
+  toolsFor(employeeId, generation) {
+    return {
+      call: (tool, input2) => {
+        if (generation !== this.generation) return { ok: false, text: "This activation has ended. Stop now." };
+        return this.callTool(employeeId, tool, input2 ?? {});
+      }
+    };
   }
-  dropInbox(member, activity) {
-    member.inbox = [];
-    this.setStatus(member, "idle", activity);
+  /**
+   * Messages from someone who is still mid-turn wait until that turn ends, so the recipient gets
+   * everything in one run (all the tasks a lead creates, all the updates from one engineer).
+   */
+  waitingOnSender(member) {
+    return member.inbox.some((item) => {
+      const source = item.causedBy ?? item.from;
+      if (source === OWNER_ID || source === "system" || source === member.data.id) return false;
+      return Boolean(this.members.get(source)?.controller);
+    });
+  }
+  /** Someone is working, or has unread work they are allowed to start. */
+  isBusy() {
+    return [...this.members.values()].some(
+      (m) => m.controller !== null || m.data.status !== "fired" && m.inbox.length > 0 && !this.limitBlocked(m)
+    );
+  }
+  limitBlocked(member) {
+    return this.activationsThisProject >= this.settings.maxActivationsPerProject || member.projectActivations >= this.settings.maxActivationsPerEmployee;
+  }
+  pausedByLimits() {
+    return [...this.members.values()].filter((m) => m.data.status !== "fired" && m.inbox.length > 0 && this.limitBlocked(m));
+  }
+  runningCount() {
+    let count = 0;
+    for (const member of this.members.values()) if (member.controller) count++;
+    return count;
+  }
+  // ───────────────────────────── helpers ─────────────────────────────
+  prdApproved() {
+    return Boolean(this.project?.prd.some((v) => v.status === "approved"));
+  }
+  setPhase(phase) {
+    if (!this.project || this.project.phase === phase) return;
+    this.project.phase = phase;
+    this.opts.bus.emit({ type: "project.phase_changed", phase });
+  }
+  taskSummary() {
+    const done = this.tasks.filter((t) => t.status === "done").length;
+    const blocked = this.tasks.filter((t) => t.status === "blocked").length;
+    return `${done}/${this.tasks.length} done${blocked ? `, ${blocked} blocked` : ""}`;
+  }
+  taskLine(t) {
+    const who = t.assigneeId ? `${this.nameOf(t.assigneeId)} (${t.assigneeId})` : "unassigned";
+    const last = t.notes.at(-1)?.text;
+    return `${t.id} [${t.status}] ${t.title} \xB7 ${who}${last ? ` \xB7 last note: ${last}` : ""}`;
   }
   setStatus(member, status, activity) {
     if (member.data.status === "fired" && status !== "fired") return;
@@ -53730,39 +54217,94 @@ ${roles}` };
   notice(level, text) {
     this.opts.bus.emit({ type: "system.notice", level, text });
   }
-  runningCount() {
-    let count = 0;
-    for (const member of this.members.values()) if (member.controller) count++;
-    return count;
+  // ───────────────────────────── persistence ─────────────────────────────
+  changed() {
+    if (!this.opts.persist || this.saveTimer) return;
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null;
+      this.saveNow();
+    }, 300);
+    this.saveTimer.unref();
   }
-  labelFor(from) {
-    if (from === OWNER_ID) return "the Owner";
-    if (from === "system") return "the company system";
-    const member = this.members.get(from);
-    return member ? `${member.data.name} (${member.data.title}, id "${member.data.id}")` : from;
+  saveNow() {
+    if (!this.opts.persist) return;
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
+    this.opts.persist.save({
+      version: 1,
+      members: [...this.members.values()].map((m) => ({ data: m.data, inbox: m.inbox, projectActivations: m.projectActivations })),
+      messages: this.messages,
+      proposals: this.proposals,
+      project: this.project,
+      tasks: this.tasks,
+      settings: this.settings,
+      metrics: this.metrics,
+      counters: { message: this.nextMessageId, task: this.nextTaskId },
+      activationsThisProject: this.activationsThisProject
+    });
+  }
+  restore(saved) {
+    for (const m of saved.members) {
+      const status = m.data.status === "fired" ? "fired" : m.inbox.length > 0 ? "queued" : "idle";
+      this.members.set(m.data.id, {
+        data: { ...m.data, status, activity: status === "queued" ? "New message waiting" : m.data.activity },
+        inbox: m.inbox,
+        controller: null,
+        projectActivations: m.projectActivations
+      });
+    }
+    this.messages = saved.messages;
+    this.proposals = saved.proposals;
+    this.project = saved.project;
+    this.tasks = saved.tasks;
+    this.settings = { ...this.settings, ...saved.settings };
+    this.metrics = saved.metrics ?? emptyMetrics();
+    this.nextMessageId = saved.counters.message;
+    this.nextTaskId = saved.counters.task;
+    this.activationsThisProject = saved.activationsThisProject;
+    if (this.members.size === 0) this.hireFounders();
   }
 };
-function idleDemo() {
-  return { running: false, mode: null, brief: null, startedAt: null, finishedAt: null };
+function emptyMetrics() {
+  return { activations: [], tasksDone: [], messages: [] };
+}
+function now() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function effortFor(roleId) {
+  if (roleId === "hr" || roleId === "writer") return "low";
+  return "medium";
 }
 function describeTrigger(inbox) {
   const senders = [...new Set(inbox.map((item) => item.fromLabel.split(" (")[0]))];
   return `${inbox.length} message${inbox.length === 1 ? "" : "s"} from ${senders.join(", ")}`;
 }
+function titleFromBrief(brief) {
+  const firstLine = brief.split("\n")[0]?.trim() ?? brief;
+  const clean = firstLine.replace(/^(please\s+)?(build|make|create)\s+(me\s+)?(an?\s+)?/i, "").trim();
+  const title = clean.length > 0 ? clean : firstLine;
+  const short = title.length > 60 ? `${title.slice(0, 57).trimEnd()}\u2026` : title;
+  return short.charAt(0).toUpperCase() + short.slice(1);
+}
+function slugify(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "project";
+}
 
 // packages/daemon/src/config.ts
 import { existsSync } from "node:fs";
 import os from "node:os";
-import path from "node:path";
+import path2 from "node:path";
 import { fileURLToPath } from "node:url";
-var here = path.dirname(fileURLToPath(import.meta.url));
-var repoRoot = path.resolve(here, "../../..");
+var here = path2.dirname(fileURLToPath(import.meta.url));
+var repoRoot = path2.resolve(here, "../../..");
 function defaultDashboardDir() {
-  const bundled = path.join(here, "dashboard");
-  return existsSync(path.join(bundled, "index.html")) ? bundled : path.join(repoRoot, "packages/dashboard/dist");
+  const bundled = path2.join(here, "dashboard");
+  return existsSync(path2.join(bundled, "index.html")) ? bundled : path2.join(repoRoot, "packages/dashboard/dist");
 }
 function loadEnvFile() {
-  const file2 = process.env.OLYMPUS_ENV_FILE ?? path.join(repoRoot, ".env");
+  const file2 = process.env.OLYMPUS_ENV_FILE ?? path2.join(repoRoot, ".env");
   if (!existsSync(file2)) return null;
   process.loadEnvFile(file2);
   return file2;
@@ -53777,29 +54319,29 @@ function numberFromEnv(name, fallback) {
   return value;
 }
 function expandHome(p) {
-  return p === "~" || p.startsWith("~/") ? path.join(os.homedir(), p.slice(1)) : p;
+  return p === "~" || p.startsWith("~/") ? path2.join(os.homedir(), p.slice(1)) : p;
 }
 function readConfig() {
   const port = numberFromEnv("OLYMPUS_PORT", 4800);
-  const workspaceDir = path.resolve(expandHome(process.env.OLYMPUS_WORKSPACE ?? "~/Olympus"));
+  const workspaceDir = path2.resolve(expandHome(process.env.OLYMPUS_WORKSPACE ?? "~/Olympus"));
   const extraOrigins = (process.env.OLYMPUS_ALLOWED_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   return {
     companyName: process.env.OLYMPUS_COMPANY_NAME ?? "Olympus",
     host: "127.0.0.1",
     port,
     workspaceDir,
-    stateDir: path.join(workspaceDir, ".olympus"),
+    stateDir: path2.join(workspaceDir, ".olympus"),
+    projectsDir: path2.join(workspaceDir, "projects"),
     dashboardDir: process.env.OLYMPUS_DASHBOARD_DIR ?? defaultDashboardDir(),
     allowedOrigins: [`http://127.0.0.1:${port}`, `http://localhost:${port}`, ...extraOrigins],
-    maxConcurrency: numberFromEnv("OLYMPUS_MAX_CONCURRENCY", 4),
-    // Phase 0 keeps runs short so they don't eat into the Owner's Claude plan.
-    maxActivationsPerEmployee: numberFromEnv("OLYMPUS_MAX_ACTIVATIONS", 3),
-    maxActivationsPerRun: numberFromEnv("OLYMPUS_MAX_RUN_ACTIVATIONS", 8),
-    hostClaimTimeoutMs: numberFromEnv("OLYMPUS_HOST_TIMEOUT_MIN", 20) * 6e4,
-    models: {
-      ceo: { model: "claude-opus-5-5", effort: "medium" },
-      hr: { model: "claude-sonnet-5-5", effort: "low" }
-    }
+    settings: {
+      mode: process.env.OLYMPUS_MODE === "simulated" ? "simulated" : "claude-code",
+      maxConcurrency: numberFromEnv("OLYMPUS_MAX_CONCURRENCY", 4),
+      // Limits keep a project from eating the Owner's Claude plan; raise them in Settings.
+      maxActivationsPerEmployee: numberFromEnv("OLYMPUS_MAX_ACTIVATIONS", 12),
+      maxActivationsPerProject: numberFromEnv("OLYMPUS_MAX_PROJECT_ACTIVATIONS", 60)
+    },
+    hostClaimTimeoutMs: numberFromEnv("OLYMPUS_HOST_TIMEOUT_MIN", 20) * 6e4
   };
 }
 
@@ -53859,11 +54401,23 @@ function summarizeToolCall(tool, input2) {
     case "report_status":
       return `status: ${clip(args.summary)}`;
     case "list_team":
-      return "checked the team list";
+      return "checked the team";
+    case "get_project":
+      return "read the project and PRD";
+    case "list_tasks":
+      return "checked the task board";
+    case "create_task":
+      return `created a task for ${clip(args.assignee, 30)}: ${clip(args.title, 70)}`;
+    case "update_task":
+      return `${clip(args.task_id, 12)} \u2192 ${clip(args.status, 14)}${args.note ? `: ${clip(args.note, 70)}` : ""}`;
+    case "submit_prd":
+      return `submitted the PRD \u201C${clip(args.title, 60)}\u201D`;
     case "propose_team": {
       const hires = Array.isArray(args.hires) ? args.hires.length : 0;
       return `proposed a team of ${hires}`;
     }
+    case "hire_team":
+      return "hired the proposed team";
     default:
       return `${tool}(${clip(JSON.stringify(args), 60)})`;
   }
@@ -53933,26 +54487,8 @@ var HostRuntime = class {
     const entry = this.pending.get(activationId);
     if (!entry) return ENDED;
     this.lastSeen = Date.now();
-    const { tools, emit } = entry.req;
-    const str = (key) => typeof input2[key] === "string" ? input2[key] : "";
-    let result;
-    switch (tool) {
-      case "post_message":
-        result = tools.postMessage(str("to"), str("text"));
-        break;
-      case "report_status":
-        result = tools.reportStatus(str("summary"));
-        break;
-      case "list_team":
-        result = tools.listTeam();
-        break;
-      case "propose_team":
-        result = tools.proposeTeam(Array.isArray(input2.hires) ? input2.hires : []);
-        break;
-      default:
-        return { ok: false, text: `Unknown company tool "${tool}".` };
-    }
-    emit({ kind: "action", tool, summary: summarizeToolCall(tool, input2) });
+    const result = entry.req.tools.call(tool, input2);
+    entry.req.emit({ kind: "action", tool, summary: summarizeToolCall(tool, input2) });
     return result;
   }
   counts() {
@@ -53975,113 +54511,231 @@ var HostRuntime = class {
 
 // packages/daemon/src/runtime/simulated.ts
 var SimulatedRuntime = class {
-  constructor(stepDelayMs = 900) {
+  constructor(stepDelayMs = 600) {
     this.stepDelayMs = stepDelayMs;
   }
   stepDelayMs;
   mode = "simulated";
   async run(req) {
     const started = Date.now();
-    for (const step of scriptFor(req)) {
-      await sleep(this.stepDelayMs, req.abortController.signal);
-      if (step.kind === "note") {
-        req.emit({ kind: "note", text: step.text });
-        continue;
+    const signal = req.abortController.signal;
+    const ctx = {
+      note: async (text) => {
+        await sleep(this.stepDelayMs, signal);
+        req.emit({ kind: "note", text });
+      },
+      call: async (tool, input2 = {}) => {
+        await sleep(this.stepDelayMs, signal);
+        req.emit({ kind: "action", tool, summary: summarizeToolCall(tool, input2) });
+        const result = req.tools.call(tool, input2);
+        if (!result.ok) req.emit({ kind: "note", text: `${tool} failed: ${result.text}` });
+        return result;
       }
-      req.emit({ kind: "action", tool: step.tool, summary: summarizeToolCall(step.tool, step) });
-      const result = step.tool === "post_message" ? req.tools.postMessage(step.to, step.text) : step.tool === "report_status" ? req.tools.reportStatus(step.summary) : req.tools.proposeTeam(step.hires);
-      if (!result.ok) req.emit({ kind: "note", text: `${step.tool} failed: ${result.text}` });
-    }
+    };
+    await script(req, ctx);
     return { outcome: "success", durationMs: Date.now() - started };
   }
 };
-var PROPOSED_TEAM = [
-  { role: "cto", name: "Arjun Mehta", level: "mts", reason: "Owns the architecture and the task breakdown." },
-  { role: "tech-lead", name: "Sana Qureshi", level: "senior", reason: "Assigns work and reviews code for the engineers." },
-  { role: "frontend", name: "Priya Nair", level: "sde2", reason: "Builds the React screens." },
-  { role: "backend-node", name: "Rahul Verma", level: "sde2", reason: "Builds the API, auth and receipt storage." },
-  { role: "qa", name: "Kabir Shah", level: "sde2", reason: "Test plan and automated tests." },
-  { role: "devops", name: "Neha Joshi", level: "sde2", reason: "Docker setup and a one-command run." }
-];
-function scriptFor(req) {
-  const fromOwner = req.inbox.find((item) => item.from === "owner");
-  const fromCeo = req.inbox.some((item) => item.from === "ceo");
-  const fromHr = req.inbox.some((item) => item.from === "hr");
-  const fromSystem = req.inbox.some((item) => item.from === "system");
-  const role = req.employee.roleId;
-  if (role === "ceo" && fromOwner) {
-    const brief = shorten(fromOwner.text, 80);
-    return [
-      { kind: "note", text: "Reading the Owner\u2019s brief and listing the users, core problem and constraints." },
-      { kind: "tool", tool: "report_status", summary: "Reading the Owner\u2019s brief" },
-      {
-        kind: "tool",
-        tool: "post_message",
-        to: "#general",
-        text: `Kickoff: we're starting "${brief}". I'll write the PRD for the Owner first. HR is preparing a staffing proposal so we can move fast once it's approved.`
-      },
-      {
-        kind: "tool",
-        tool: "post_message",
-        to: "hr",
-        text: `Please draft a staffing proposal for "${brief}". Roles I expect: CTO (MTS), a Tech Lead, one frontend and one Node.js backend engineer, QA, and DevOps. Keep it lean. Nobody is hired before the Owner approves the PRD.`
-      },
-      {
-        kind: "tool",
-        tool: "post_message",
-        to: "owner",
-        text: "Status: on track \xB7 Done: read your brief, asked HR for a staffing proposal \xB7 Next: PRD v1 for your approval \xB7 Needs from you: nothing yet"
-      },
-      { kind: "tool", tool: "report_status", summary: "Waiting for HR\u2019s staffing proposal" }
-    ];
+function parseTeam(text) {
+  const people = [];
+  for (const line of text.split("\n")) {
+    const match = /^- (.+?), (.+?): id "([^"]+)"/.exec(line);
+    if (match) people.push({ name: match[1], title: match[2], id: match[3] });
   }
-  if (role === "ceo" && fromHr) {
-    return [
-      { kind: "note", text: "Checking HR\u2019s proposal against the brief: six roles, sensible levels." },
-      {
-        kind: "tool",
-        tool: "post_message",
-        to: "owner",
-        text: "Status: on track \xB7 Done: HR proposed a 6-person team under the CTO (see the org chart) \xB7 Next: PRD v1 \xB7 Needs from you: approve the PRD when it arrives"
-      },
-      { kind: "tool", tool: "report_status", summary: "Drafting PRD v1 (next phase)" }
-    ];
-  }
-  if (role === "hr" && fromCeo) {
-    return [
-      { kind: "note", text: "Matching each requested role to a level and model." },
-      { kind: "tool", tool: "report_status", summary: "Preparing a staffing proposal" },
-      { kind: "tool", tool: "propose_team", hires: PROPOSED_TEAM },
-      {
-        kind: "tool",
-        tool: "post_message",
-        to: "ceo",
-        text: "Staffing proposal is on the org chart: CTO Arjun (MTS) with Tech Lead Sana (Senior), Priya (Frontend), Rahul (Node.js backend), Kabir (QA) and Neha (DevOps), all SDE-II. Nobody is hired until the Owner approves the PRD."
-      },
-      { kind: "tool", tool: "post_message", to: "#general", text: "A staffing proposal is with the CEO." }
-    ];
-  }
-  if (role === "hr" && fromSystem) {
-    return [
-      { kind: "note", text: "First day. Writing a short introduction with our hiring principles." },
-      {
-        kind: "tool",
-        tool: "post_message",
-        to: "#general",
-        text: [
-          "Hi all, I\u2019m Meera, Head of HR. How we hire:",
-          "\u2022 Smallest team that fits the work.",
-          "\u2022 Reassign before we hire.",
-          "\u2022 Nobody joins a project before the Owner approves its PRD."
-        ].join("\n")
-      }
-    ];
-  }
-  return [{ kind: "note", text: "Nothing in these messages needs action from me." }];
+  return people;
 }
-function shorten(text, max) {
-  const flat = text.replace(/\s+/g, " ").trim();
-  return flat.length > max ? `${flat.slice(0, max - 1)}\u2026` : flat;
+var roleOf = (id) => id.replace(/-\d+$/, "");
+var has = (inbox, pred) => inbox.some(pred);
+var fromRole = (role) => (i) => i.from !== "owner" && i.from !== "system" && roleOf(i.from) === role;
+var mentions = (word) => (i) => i.text.toLowerCase().includes(word);
+var LEADS = /* @__PURE__ */ new Set(["tech-lead", "cto"]);
+var TASKS_BY_ROLE = {
+  frontend: [
+    ["Build the main screens", "Create the React UI for the core flows in the PRD, with clean components."],
+    ["Responsive and accessible UI", "Make every screen work on phone and desktop, with keyboard support and labels."]
+  ],
+  "backend-node": [
+    ["Core API and data model", "Build the Node.js API and data model the PRD needs, with input validation."],
+    ["Persistence and error handling", "Store data safely and return clear errors."]
+  ],
+  "backend-python": [
+    ["Core API and data model", "Build the FastAPI service and data model the PRD needs."],
+    ["Persistence and error handling", "Store data safely and return clear errors."]
+  ],
+  fullstack: [
+    ["Build the app end to end", "Implement every PRD user story, UI and logic."],
+    ["Unit tests for the core logic", "Cover the rules and edge cases with automated tests."]
+  ],
+  qa: [
+    ["Test plan from the acceptance criteria", "Map each PRD acceptance criterion to a test."],
+    ["Automated tests and bug report", "Automate the plan, run it, and report anything that fails."]
+  ],
+  devops: [["One-command run", "Add a run script and README steps so the app starts with one command."]],
+  designer: [["Screen designs", "Design the main screens and the UI copy."]],
+  writer: [["README and user guide", "Write setup, run and usage docs."]]
+};
+var SIM_PRD = (brief, version2, change) => `# PRD v${version2}
+
+## 1. Summary
+${brief}
+
+## 2. Goals
+- Ship a small, working first version that does exactly what the brief asks.
+- Keep it simple to run: one command, clear README.
+
+## 3. Users
+The Owner and the people they share it with.
+
+## 4. User stories
+1. **As a user, I can use the core feature end to end.**
+   - Given the app is open, when I complete the main flow, then I see the expected result.
+2. **As a user, I get clear feedback when something goes wrong.**
+   - Given invalid input, when I submit it, then I see a helpful message.
+
+## 5. Scope
+- **MVP:** the core flow, basic styling, automated tests for the main rules.
+- **Later:** accounts, sharing, analytics.
+
+## 6. Non-functional
+- Loads in under 2 seconds on a laptop.
+- Works on the latest Chrome, Safari and Firefox, phone and desktop.
+
+## 7. Team and plan
+Tech Lead, frontend, backend and QA, in parallel. Done when every task on the board is done and tests pass.
+${change ? `
+## Changes in v${version2}
+- ${change}
+` : ""}`;
+async function script(req, ctx) {
+  const { inbox } = req;
+  const role = req.employee.roleId;
+  if (role === "ceo") {
+    const brief = inbox.find((i) => i.kind === "brief");
+    if (brief) {
+      await ctx.note("Reading the Owner\u2019s brief: users, core problem, scope.");
+      await ctx.call("report_status", { summary: "Writing PRD v1" });
+      await ctx.call("post_message", { to: "#general", text: `Kickoff: we're building \u201C${brief.text.slice(0, 80)}\u201D. PRD first, then the team.` });
+      await ctx.call("post_message", {
+        to: "hr",
+        text: "Please draft a staffing proposal: a Tech Lead (Senior), one frontend and one Node.js backend engineer (SDE-II), and QA (SDE-II). Nobody is hired before the Owner approves the PRD."
+      });
+      await ctx.call("submit_prd", { title: "First version", markdown: SIM_PRD(brief.text, 1) });
+      await ctx.call("post_message", {
+        to: "owner",
+        text: "Status: on track \xB7 Done: PRD v1 is ready for you \xB7 Next: HR is drafting the team \xB7 Needs from you: approve the PRD (Project page) or ask for changes."
+      });
+      await ctx.call("report_status", { summary: "Waiting for the Owner to approve PRD v1" });
+      return;
+    }
+    const changes = inbox.find((i) => i.kind === "prd_changes");
+    if (changes) {
+      const project = await ctx.call("get_project");
+      const brief2 = /Brief: (.*)/.exec(project.text)?.[1] ?? "the product";
+      const ask = changes.text.split("\n")[1] ?? "the Owner\u2019s comments";
+      await ctx.note("Revising the PRD with the Owner\u2019s comments.");
+      const version2 = Number(/PRD v(\d+)/.exec(changes.text)?.[1] ?? "1") + 1;
+      await ctx.call("submit_prd", { title: `Revision ${version2}`, markdown: SIM_PRD(brief2, version2, ask) });
+      await ctx.call("post_message", { to: "owner", text: `Status: on track \xB7 Done: PRD v${version2} addresses your comments \xB7 Needs from you: approve or ask for more changes.` });
+      return;
+    }
+    if (has(inbox, (i) => i.kind === "prd_approved")) {
+      await ctx.call("post_message", { to: "hr", text: "The Owner approved the PRD. Please hire the proposed team with hire_team." });
+      await ctx.call("report_status", { summary: "Hiring the team" });
+      return;
+    }
+    if (has(inbox, (i) => fromRole("hr")(i) && mentions("hired")(i))) {
+      const team = parseTeam((await ctx.call("list_team")).text);
+      const lead = team.find((p) => LEADS.has(roleOf(p.id)));
+      if (lead) {
+        await ctx.call("post_message", { to: lead.id, text: "The PRD is approved and the team is hired. Please break it into tasks, assign them, and keep me posted until everything is done." });
+      } else {
+        for (const p of team.filter((x) => !["ceo", "hr"].includes(roleOf(x.id)))) {
+          await ctx.call("create_task", { title: "Build your part of the PRD", description: "Deliver your part and tests.", assignee: p.id });
+        }
+      }
+      await ctx.call("report_status", { summary: "Team is building" });
+      return;
+    }
+    if (has(inbox, (i) => fromRole("hr")(i) && mentions("proposal")(i))) {
+      await ctx.call("post_message", { to: "owner", text: "Status: on track \xB7 HR proposed the team (see Project \u2192 Staffing) \xB7 Needs from you: approve PRD v1 so we can hire." });
+      return;
+    }
+    if (has(inbox, mentions("all tasks are done"))) {
+      await ctx.call("post_message", { to: "owner", text: "Status: done \xB7 Every task on the board is complete and checked by the Tech Lead. The build is ready for your review." });
+      await ctx.call("report_status", { summary: "Project complete" });
+      return;
+    }
+    const owner = inbox.find((i) => i.kind === "owner");
+    if (owner) {
+      await ctx.call("post_message", { to: "owner", text: `Got it: \u201C${owner.text.slice(0, 100)}\u201D. I\u2019ll take it into account and keep you posted.` });
+      return;
+    }
+    if (has(inbox, (i) => i.kind === "onboarding")) {
+      await ctx.call("get_project");
+      await ctx.call("post_message", { to: "#general", text: `Hi all, I\u2019m ${req.employee.name}, the new CEO. Picking up where we left off.` });
+      return;
+    }
+    await ctx.note("Nothing here needs action from me.");
+    return;
+  }
+  if (role === "hr") {
+    if (has(inbox, (i) => fromRole("ceo")(i) && mentions("staffing")(i))) {
+      await ctx.call("report_status", { summary: "Drafting the staffing proposal" });
+      await ctx.call("propose_team", {
+        hires: [
+          { role: "tech-lead", name: "Sana Qureshi", level: "senior", reason: "Plans the tasks and monitors the work end to end." },
+          { role: "frontend", name: "Priya Nair", level: "sde2", reason: "Builds the screens." },
+          { role: "backend-node", name: "Rahul Verma", level: "sde2", reason: "Builds the API and data." },
+          { role: "qa", name: "Kabir Shah", level: "sde2", reason: "Tests against the acceptance criteria." }
+        ]
+      });
+      await ctx.call("post_message", { to: "ceo", text: "Staffing proposal recorded: Sana (Tech Lead, Senior), Priya (Frontend), Rahul (Node.js backend), Kabir (QA), all ready to hire once the PRD is approved." });
+      return;
+    }
+    if (has(inbox, (i) => fromRole("ceo")(i) && mentions("hire")(i))) {
+      const result = await ctx.call("hire_team");
+      await ctx.call("post_message", { to: "ceo", text: result.ok ? `Hired the team.
+${result.text}` : `Could not hire yet: ${result.text}` });
+      return;
+    }
+    await ctx.call("post_message", { to: "#general", text: `Hi all, I\u2019m ${req.employee.name}, Head of HR. Smallest team that fits the work; nobody joins before the PRD is approved.` });
+    return;
+  }
+  if (LEADS.has(role)) {
+    if (has(inbox, (i) => i.kind === "task_update")) {
+      const done = has(inbox, mentions("all tasks are done"));
+      if (done) {
+        await ctx.call("list_tasks");
+        await ctx.call("post_message", { to: "ceo", text: "All tasks are done and checked. The build is ready." });
+        await ctx.call("report_status", { summary: "All tasks done" });
+      } else {
+        const board = /Board: ([^.\n]+)/.exec(inbox.at(-1)?.text ?? "")?.[1] ?? "";
+        await ctx.call("report_status", { summary: `Monitoring the board: ${board}` });
+      }
+      return;
+    }
+    const team = parseTeam((await ctx.call("list_team")).text);
+    const builders = team.filter((p) => TASKS_BY_ROLE[roleOf(p.id)]);
+    await ctx.note(`Breaking the PRD into tasks for ${builders.length} people.`);
+    for (const person of builders) {
+      for (const [title, description] of TASKS_BY_ROLE[roleOf(person.id)] ?? []) {
+        await ctx.call("create_task", { title, description, assignee: person.id });
+      }
+    }
+    await ctx.call("post_message", { to: "#general", text: "The plan is on the task board. Move your tasks as you go; I\u2019m watching the board until we\u2019re done." });
+    await ctx.call("report_status", { summary: "Monitoring the task board" });
+    return;
+  }
+  const taskIds = [...new Set(inbox.flatMap((i) => [...i.text.matchAll(/\b(T-\d+)\b/g)].map((m) => m[1])))];
+  if (taskIds.length === 0) {
+    await ctx.note("No task in these messages.");
+    return;
+  }
+  for (const id of taskIds) {
+    await ctx.call("update_task", { task_id: id, status: "in_progress", note: "Started." });
+    await ctx.note(`Working on ${id}.`);
+    await ctx.call("update_task", { task_id: id, status: "done", note: "Done, with tests." });
+  }
 }
 function sleep(ms, signal) {
   return new Promise((resolve, reject) => {
@@ -54104,7 +54758,7 @@ var import_websocket = __toESM(require_websocket2(), 1);
 var import_fastify = __toESM(require_fastify(), 1);
 import { timingSafeEqual } from "node:crypto";
 import { existsSync as existsSync2 } from "node:fs";
-import path2 from "node:path";
+import path3 from "node:path";
 
 // node_modules/zod/v4/classic/external.js
 var external_exports = {};
@@ -54758,7 +55412,7 @@ __export(util_exports, {
   safeExtend: () => safeExtend,
   shallowClone: () => shallowClone,
   sizeCaps: () => sizeCaps,
-  slugify: () => slugify,
+  slugify: () => slugify2,
   stringifyPrimitive: () => stringifyPrimitive,
   toZod: () => toZod,
   uint8ArrayToBase64: () => uint8ArrayToBase64,
@@ -54923,10 +55577,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path4) {
-  if (!path4)
+function getElementAtPath(obj, path5) {
+  if (!path5)
     return obj;
-  return path4.reduce((acc, key) => acc?.[key], obj);
+  return path5.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -54950,7 +55604,7 @@ function randomString(length = 10) {
 function esc(str) {
   return JSON.stringify(str);
 }
-function slugify(input2) {
+function slugify2(input2) {
   return input2.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
 }
 var captureStackTrace = "captureStackTrace" in Error ? Error.captureStackTrace : (..._args) => {
@@ -55266,11 +55920,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path4, issues) {
+function prefixIssues(path5, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path4);
+    iss.path.unshift(path5);
     return iss;
   });
 }
@@ -55732,16 +56386,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path4 = []) => {
+  const processError = (error63, path5 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path4, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path5, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path4, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path5, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path4, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path5, ...issue2.path]);
       } else {
-        const fullpath = [...path4, ...issue2.path];
+        const fullpath = [...path5, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -55780,17 +56434,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path4 = []) => {
+  const processError = (error63, path5 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path4, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path5, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path4, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path5, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path4, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path5, ...issue2.path]);
       } else {
-        const fullpath = [...path4, ...issue2.path];
+        const fullpath = [...path5, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -55829,8 +56483,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path4 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path4) {
+  const path5 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path5) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -69360,7 +70014,7 @@ function _toUpperCase() {
 }
 // @__NO_SIDE_EFFECTS__
 function _slugify() {
-  return /* @__PURE__ */ _overwrite((input2) => slugify(input2));
+  return /* @__PURE__ */ _overwrite((input2) => slugify2(input2));
 }
 // @__NO_SIDE_EFFECTS__
 function _array(Class2, element, params) {
@@ -72968,13 +73622,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path4 = ref.slice(1).split("/").filter(Boolean);
-  if (path4.length === 0) {
+  const path5 = ref.slice(1).split("/").filter(Boolean);
+  if (path5.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path4[0] === defsKey) {
-    const key = path4[1] === void 0 ? void 0 : decodeJSONPointerSegment(path4[1]);
+  if (path5[0] === defsKey) {
+    const key = path5[1] === void 0 ? void 0 : decodeJSONPointerSegment(path5[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -73826,8 +74480,25 @@ function date4(params) {
 // packages/daemon/src/server.ts
 var DAEMON_VERSION = "0.0.1";
 var StartBody = external_exports.object({
-  brief: external_exports.string().trim().min(5, "Write a brief of at least 5 characters.").max(2e3),
-  mode: external_exports.enum(["claude-code", "simulated"])
+  brief: external_exports.string().trim().min(5, "Write a brief of at least 5 characters.").max(4e3)
+});
+var DecisionBody = external_exports.object({
+  decision: external_exports.enum(["approve", "changes"]),
+  comment: external_exports.string().trim().max(4e3).nullish()
+});
+var OwnerMessageBody = external_exports.object({
+  text: external_exports.string().trim().min(1, "Write a message.").max(4e3)
+});
+var HireBody = external_exports.object({
+  roleId: external_exports.string().min(1).max(40),
+  name: external_exports.string().trim().max(60).nullish(),
+  level: external_exports.enum(["sde1", "sde2", "senior", "mts"]).nullish()
+});
+var SettingsBody = external_exports.object({
+  mode: external_exports.enum(["claude-code", "simulated"]).optional(),
+  maxConcurrency: external_exports.number().int().optional(),
+  maxActivationsPerEmployee: external_exports.number().int().optional(),
+  maxActivationsPerProject: external_exports.number().int().optional()
 });
 var FireBody = external_exports.object({
   reason: external_exports.string().trim().min(1).max(300).default("Fired by the Owner")
@@ -73838,7 +74509,18 @@ var DoneBody = external_exports.object({
 });
 var AgentToolBody = external_exports.object({
   activation: external_exports.string().min(1).max(64),
-  tool: external_exports.enum(["post_message", "report_status", "list_team", "propose_team"]),
+  tool: external_exports.enum([
+    "post_message",
+    "report_status",
+    "list_team",
+    "get_project",
+    "list_tasks",
+    "create_task",
+    "update_task",
+    "submit_prd",
+    "propose_team",
+    "hire_team"
+  ]),
   input: external_exports.record(external_exports.string(), external_exports.unknown()).default({})
 });
 function tokenMatches(expected, given) {
@@ -73848,7 +74530,7 @@ function tokenMatches(expected, given) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 async function buildServer(opts) {
-  const app = (0, import_fastify.default)({ logger: false, bodyLimit: 64 * 1024 });
+  const app = (0, import_fastify.default)({ logger: false, bodyLimit: 256 * 1024 });
   const startedAt = (/* @__PURE__ */ new Date()).toISOString();
   await app.register(import_websocket.default);
   app.addHook("onRequest", async (request, reply) => {
@@ -73888,12 +74570,32 @@ async function buildServer(opts) {
     startedAt
   }));
   app.get("/api/state", async () => opts.company.snapshot());
-  app.post("/api/demo/start", async (request, reply) => {
+  app.post("/api/project/start", async (request, reply) => {
     const body = StartBody.parse(request.body ?? {});
-    opts.company.startDemo(body.brief, body.mode);
-    return reply.code(202).send({ ok: true });
+    const project = opts.company.startProject(body.brief);
+    return reply.code(202).send({ ok: true, project });
   });
-  app.post("/api/demo/reset", async () => {
+  app.post("/api/project/prd/decision", async (request) => {
+    const body = DecisionBody.parse(request.body ?? {});
+    opts.company.decidePrd(body.decision, body.comment ?? null);
+    return { ok: true };
+  });
+  app.post("/api/owner/message", async (request) => {
+    const body = OwnerMessageBody.parse(request.body ?? {});
+    opts.company.ownerMessage(body.text);
+    return { ok: true };
+  });
+  app.post("/api/employees/hire", async (request) => {
+    const body = HireBody.parse(request.body ?? {});
+    const employee = opts.company.ownerHire(body.roleId, body.name ?? null, body.level ?? null);
+    return { ok: true, employee };
+  });
+  app.post("/api/settings", async (request) => {
+    const body = SettingsBody.parse(request.body ?? {});
+    const patch = Object.fromEntries(Object.entries(body).filter(([, v]) => v !== void 0));
+    return { ok: true, settings: opts.company.updateSettings(patch) };
+  });
+  app.post("/api/company/reset", async () => {
     opts.company.reset();
     return { ok: true };
   });
@@ -73921,14 +74623,27 @@ async function buildServer(opts) {
     const send = (frame) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(frame));
     };
-    send({ kind: "hello", state: opts.company.snapshot(), recentEvents: opts.bus.recent(300) });
+    send({ kind: "hello", state: opts.company.snapshot(), recentEvents: opts.bus.recent(400) });
+    let pending = [];
+    let timer = null;
+    const flush = () => {
+      timer = null;
+      const events = pending;
+      pending = [];
+      if (events.length > 0) send({ kind: "events", events, state: opts.company.snapshot() });
+    };
     const unsubscribe = opts.bus.subscribe((event) => {
-      send({ kind: "event", event, state: opts.company.snapshot() });
+      pending.push(event);
+      timer ??= setTimeout(flush, 100);
     });
-    socket.on("close", unsubscribe);
-    socket.on("error", unsubscribe);
+    const stop = () => {
+      unsubscribe();
+      if (timer) clearTimeout(timer);
+    };
+    socket.on("close", stop);
+    socket.on("error", stop);
   });
-  const indexFile = path2.join(opts.dashboardDir, "index.html");
+  const indexFile = path3.join(opts.dashboardDir, "index.html");
   if (existsSync2(indexFile)) {
     await app.register(import_static.default, { root: opts.dashboardDir, prefix: "/" });
     app.setNotFoundHandler((request, reply) => {
@@ -73950,7 +74665,7 @@ Run: npm run build
 
 // packages/daemon/src/main.ts
 function ownerToken(stateDir) {
-  const file2 = path3.join(stateDir, "owner-token");
+  const file2 = path4.join(stateDir, "owner-token");
   if (existsSync3(file2)) {
     const saved = readFileSync(file2, "utf8").trim();
     if (saved.length >= 32) return saved;
@@ -73963,14 +74678,34 @@ function ownerToken(stateDir) {
 async function main() {
   const envFile = loadEnvFile();
   const config2 = readConfig();
-  mkdirSync(config2.stateDir, { recursive: true });
-  const bus = new EventBus(path3.join(config2.stateDir, "events.jsonl"));
+  mkdirSync2(config2.stateDir, { recursive: true });
+  mkdirSync2(config2.projectsDir, { recursive: true });
+  const bus = new EventBus(path4.join(config2.stateDir, "events.jsonl"));
+  const stateFile = path4.join(config2.stateDir, "company.json");
   const company = new Company({
-    config: config2,
+    companyName: config2.companyName,
+    projectsDir: config2.projectsDir,
+    settings: config2.settings,
     bus,
-    runtimes: { host: new HostRuntime(config2.hostClaimTimeoutMs), simulated: new SimulatedRuntime() }
+    runtimes: { host: new HostRuntime(config2.hostClaimTimeoutMs), simulated: new SimulatedRuntime() },
+    persist: {
+      load: () => {
+        if (!existsSync3(stateFile)) return null;
+        try {
+          return JSON.parse(readFileSync(stateFile, "utf8"));
+        } catch (err) {
+          console.error(`[daemon] could not read ${stateFile}, starting fresh:`, err);
+          return null;
+        }
+      },
+      save: (saved) => {
+        const tmp = `${stateFile}.tmp`;
+        writeFileSync(tmp, JSON.stringify(saved));
+        renameSync(tmp, stateFile);
+      }
+    }
   });
-  const pidFile = path3.join(config2.stateDir, "daemon.pid");
+  const pidFile = path4.join(config2.stateDir, "daemon.pid");
   let shuttingDown = false;
   const shutdown = async (signal) => {
     if (shuttingDown) return;

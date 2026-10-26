@@ -1,26 +1,30 @@
 ---
 name: run
-description: Let the Olympus team work on whatever is waiting (for example a run started from the dashboard, or one interrupted earlier). Runs the Olympus work loop in this Claude Code session.
-allowed-tools: Agent, mcp__plugin_olympus_company__next_work, mcp__plugin_olympus_company__activation_done, mcp__plugin_olympus_company__company_status, mcp__plugin_olympus_company__post_message, mcp__plugin_olympus_company__report_status, mcp__plugin_olympus_company__list_team, mcp__plugin_olympus_company__propose_team
+description: Let the Olympus team pick up whatever work is waiting (for example after a PRD decision or a message from the dashboard). Runs the Olympus work loop in this Claude Code session.
+allowed-tools: Agent, mcp__plugin_olympus_company__start_project, mcp__plugin_olympus_company__next_work, mcp__plugin_olympus_company__activation_done, mcp__plugin_olympus_company__company_status, mcp__plugin_olympus_company__owner_message, mcp__plugin_olympus_company__get_prd, mcp__plugin_olympus_company__decide_prd, mcp__plugin_olympus_company__owner_hire, mcp__plugin_olympus_company__owner_fire, mcp__plugin_olympus_company__post_message, mcp__plugin_olympus_company__report_status, mcp__plugin_olympus_company__list_team, mcp__plugin_olympus_company__get_project, mcp__plugin_olympus_company__list_tasks, mcp__plugin_olympus_company__create_task, mcp__plugin_olympus_company__update_task, mcp__plugin_olympus_company__submit_prd, mcp__plugin_olympus_company__propose_team, mcp__plugin_olympus_company__hire_team
 ---
 
 # Run Olympus's waiting work
 
-You are Olympus's office manager in this session. The employees are plugin subagents. You
-don't do their work: you run them when the company asks.
+## Run the work loop
+
+You are Olympus's office manager in this session. The employees are plugin subagents; you run
+them when the company asks, and you never do their work yourself.
 
 1. Call `next_work` from the Olympus `company` MCP server.
-2. If its status is `no_run`, tell the Owner there is nothing to run and that they can start
-   with `/olympus:brief <what to build>`. Stop.
-3. If its status is `work`: start one Agent call per activation, all in the same message so
+2. If the status is `work`: start one Agent call per activation, all in the same message so
    they run in parallel. Use `subagent_type` = the activation's `agent`, `description` = its
-   `description`, and `prompt` = its `prompt` copied exactly. Run them in the foreground.
-4. When each agent returns, call `activation_done` with its `activation_id` and the agent's
-   final report. Then call `next_work` again.
-5. If the status is `busy`, report any agent you haven't reported yet, then call `next_work`
-   again.
-6. Repeat until the status is `finished`. Then summarise for the Owner the messages the CEO
-   sent them (from `ownerMessages`) and give the dashboard link (`company_status` shows it).
+   `description`, and `prompt` = its `prompt`, copied exactly.
+3. Each time an agent finishes (its result, or its completion notification if it ran in the
+   background), call `activation_done` with its `activation_id` and the agent's final report.
+   When agents run in the background, don't poll or wait in a loop: end your turn and carry on
+   when the notifications arrive.
+4. After reporting, call `next_work` again. `busy` means agents are still running: wait for them.
+5. Stop when the status is `finished` or `no_run`. Then tell the Owner, in a few short lines,
+   what the CEO reported (`ownerMessages`) and what the company is waiting for. If a PRD is
+   waiting, say they can read it on the dashboard's Project page or with `/olympus:prd`, and
+   decide with `/olympus:approve` or `/olympus:changes <what to change>`.
 
-Don't call the employee tools (`post_message`, `report_status`, `list_team`, `propose_team`)
-yourself.
+The employee tools (post_message, report_status, list_team, get_project, list_tasks, create_task,
+update_task, submit_prd, propose_team, hire_team) belong to the employees and need an activation
+id. Don't call them yourself.

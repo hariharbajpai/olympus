@@ -1,5 +1,5 @@
 import type { HostActivation } from '@olympus/shared';
-import type { ActivationRequest, ActivationResult, AgentRuntime, HireProposalInput, ToolResult } from './types.js';
+import type { ActivationRequest, ActivationResult, AgentRuntime, ToolResult } from './types.js';
 import { summarizeToolCall } from './types.js';
 
 interface Pending {
@@ -83,26 +83,8 @@ export class HostRuntime implements AgentRuntime {
     const entry = this.pending.get(activationId);
     if (!entry) return ENDED;
     this.lastSeen = Date.now();
-    const { tools, emit } = entry.req;
-    const str = (key: string) => (typeof input[key] === 'string' ? (input[key] as string) : '');
-    let result: ToolResult;
-    switch (tool) {
-      case 'post_message':
-        result = tools.postMessage(str('to'), str('text'));
-        break;
-      case 'report_status':
-        result = tools.reportStatus(str('summary'));
-        break;
-      case 'list_team':
-        result = tools.listTeam();
-        break;
-      case 'propose_team':
-        result = tools.proposeTeam(Array.isArray(input.hires) ? (input.hires as HireProposalInput[]) : []);
-        break;
-      default:
-        return { ok: false, text: `Unknown company tool "${tool}".` };
-    }
-    emit({ kind: 'action', tool, summary: summarizeToolCall(tool, input) });
+    const result = entry.req.tools.call(tool, input);
+    entry.req.emit({ kind: 'action', tool, summary: summarizeToolCall(tool, input) });
     return result;
   }
 

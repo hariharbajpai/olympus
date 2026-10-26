@@ -3,20 +3,40 @@
 Tell your CEO what to build, approve the plan, and watch an AI company of Claude agents build it.
 The full plan is in [docs/PRD.md](docs/PRD.md).
 
-**Status: Phase 0 spike.** The founding team (CEO and Head of HR) works in parallel, talks through
-company tools, and HR proposes a team. The dashboard shows it all live, including the full org chart
-with reporting lines. You can fire someone mid-run.
+**Status: Phase 1.** The company starts with a CEO and a Head of HR. Brief the CEO, approve the PRD,
+and watch HR hire the team, the Tech Lead plan the tasks and run the board, and the engineers build it,
+all live on a dashboard with an org chart, a task board and progress charts.
 
 ## How it runs
 
-No API key. Employees are **Claude Code subagents** (`olympus:ceo`, `olympus:hr`, …) that run inside
-your own Claude Code session, on its login:
+No API key. Employees are **Claude Code subagents** (`olympus:ceo`, `olympus:hr`, `olympus:tech-lead`,
+`olympus:frontend`, … 16 roles) that run inside your own Claude Code session, on its login.
 
-1. `/olympus:brief <what to build>` starts a run. The daemon gives the CEO your brief.
-2. The skill runs a loop in your session: `next_work` returns the employees who have work, the
-   session starts them as parallel subagents, and reports each one back with `activation_done`.
-3. Employees use company tools (`post_message`, `report_status`, `list_team`, `propose_team`) from the
-   plugin's MCP server. The daemon checks every call and streams everything to the dashboard.
+1. **Brief.** `/olympus:brief <what to build>` (or the dashboard) starts a project. The CEO writes a PRD
+   and HR proposes a team.
+2. **Approve.** The PRD shows on the dashboard's Project page. Approve it there or with
+   `/olympus:approve`; ask for changes with `/olympus:changes <what to change>`. Nothing is hired and no
+   task starts before you approve: the daemon enforces it.
+3. **Build.** HR hires the proposed team; their cards appear on the org chart under their managers. The
+   Tech Lead breaks the PRD into tasks, and hears about every finished or blocked task until the board
+   is done. Engineers write the code in `~/Olympus/projects/<project>/`.
+4. Work moves while `/olympus:brief`, `/olympus:run` or another `/olympus` command runs the work loop in
+   your session. A run is capped at 60 agent runs (12 per person); change it in Settings.
+
+The dashboard's **Simulated** mode (Settings) runs the same flow for free, with scripted employees.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `/olympus:start` | Start the company and open the dashboard |
+| `/olympus:brief <what to build>` | New project: the CEO gets the brief, then the team works |
+| `/olympus:prd` | Show the PRD waiting for you |
+| `/olympus:approve [note]` · `/olympus:changes <what>` | Decide on the PRD, then the team works |
+| `/olympus:tell <message>` | Message the CEO, then the team works |
+| `/olympus:hire <role> [name]` · `/olympus:fire <name> [reason]` | Hire or fire anyone, including the CEO and HR |
+| `/olympus:run` | Let the team pick up waiting work (for example after you acted on the dashboard) |
+| `/olympus:status` · `/olympus:stop` | Status, and stop the daemon (state is saved) |
 
 ## Install
 
@@ -30,6 +50,9 @@ claude plugin marketplace add hariharbajpai/olympus
 ```bash
 claude plugin install olympus@olympus
 ```
+
+To get a newer version later: `claude plugin marketplace update olympus`, then
+`claude plugin update olympus@olympus`, and start a new Claude Code session.
 
 To try your local checkout instead, add the folder as the marketplace
 (`claude plugin marketplace add /path/to/this/repo`) and install the same way.
@@ -49,20 +72,20 @@ dashboard's **Simulated** mode runs the same flow for free, with scripted employ
 | Path | What it is |
 | --- | --- |
 | `packages/shared` | Types shared by the daemon, dashboard, CLI and MCP server |
-| `packages/daemon` | Fastify API + WebSocket, company scheduler, host runtime (Claude Code) and simulated runtime |
-| `packages/dashboard` | React + Vite live dashboard |
+| `packages/daemon` | Fastify API + WebSocket, company rules and scheduler, projects, PRD, tasks, host runtime (Claude Code) and simulated runtime |
+| `packages/dashboard` | React + Vite dashboard: sidebar sections, org chart, PRD review, task board, charts |
 | `packages/cli` | `olympus` CLI and daemon control |
 | `packages/mcp` | The plugin's `company` MCP server |
 | `plugin/` | The Claude Code plugin: agents, skills, `.mcp.json`, and the built bundles in `dist/` (committed) |
 | `docs/PRD.md` | Product requirements |
 
-Runtime data lives in `~/Olympus/.olympus/`: `owner-token`, `events.jsonl`, `daemon.log`, `daemon.pid`.
+Runtime data lives in `~/Olympus/.olympus/` (`company.json` keeps the company across restarts, plus `owner-token`, `events.jsonl`, `daemon.log`). Project code goes in `~/Olympus/projects/`.
 
 ## Development
 
 ```bash
 npm install
-npm run build                    # builds everything and refreshes plugin/dist
+npm run build                    # regenerates agents and skills, builds everything, refreshes plugin/dist
 npm test                         # company + host-loop tests (no model calls)
 npm run typecheck
 node scripts/smoke-mcp.mjs       # drives the plugin MCP server end to end (no model calls)

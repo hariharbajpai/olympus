@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { Company } from './company.js';
+import { Company, type SavedCompany } from './company.js';
 import { loadEnvFile, readConfig } from './config.js';
 import { EventBus } from './events.js';
 import { HostRuntime } from './runtime/host.js';
@@ -25,11 +25,31 @@ async function main(): Promise<void> {
   const config = readConfig();
   mkdirSync(config.stateDir, { recursive: true });
 
+  mkdirSync(config.projectsDir, { recursive: true });
   const bus = new EventBus(path.join(config.stateDir, 'events.jsonl'));
+  const stateFile = path.join(config.stateDir, 'company.json');
   const company = new Company({
-    config,
+    companyName: config.companyName,
+    projectsDir: config.projectsDir,
+    settings: config.settings,
     bus,
     runtimes: { host: new HostRuntime(config.hostClaimTimeoutMs), simulated: new SimulatedRuntime() },
+    persist: {
+      load: () => {
+        if (!existsSync(stateFile)) return null;
+        try {
+          return JSON.parse(readFileSync(stateFile, 'utf8')) as SavedCompany;
+        } catch (err) {
+          console.error(`[daemon] could not read ${stateFile}, starting fresh:`, err);
+          return null;
+        }
+      },
+      save: (saved) => {
+        const tmp = `${stateFile}.tmp`;
+        writeFileSync(tmp, JSON.stringify(saved));
+        renameSync(tmp, stateFile);
+      },
+    },
   });
 
   const pidFile = path.join(config.stateDir, 'daemon.pid');

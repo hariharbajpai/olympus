@@ -1,6 +1,6 @@
 ---
 name: stop
-description: Stop the Olympus company daemon. Running agents are stopped and the dashboard goes offline.
+description: Stop the Olympus daemon. The dashboard goes offline; the company’s state is saved.
 allowed-tools: Bash(node:*)
 disable-model-invocation: true
 ---

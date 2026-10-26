@@ -36774,25 +36774,29 @@ async function guarded(fn) {
     return text(err instanceof DaemonError || err instanceof Error ? err.message : String(err), true);
   }
 }
+async function ownerCall(apiPath, body) {
+  const up = await ensureDaemon();
+  if (!up.ok) throw new DaemonError(up.error);
+  return daemonFetch(apiPath, body);
+}
 var server = new McpServer(
-  { name: "olympus-company", version: "0.0.1" },
+  { name: "olympus-company", version: "0.1.0" },
   {
-    instructions: "Olympus runs an AI software company inside this Claude Code session. The Owner starts work with /olympus:brief; the session then runs the work loop (next_work \u2192 Agent calls \u2192 activation_done). The post_message, report_status, list_team and propose_team tools belong to Olympus employee subagents and need their activation id."
+    instructions: "Olympus runs an AI software company inside this Claude Code session. The Owner starts work with /olympus:brief; the session then runs the work loop (next_work \u2192 Agent calls \u2192 activation_done). The Owner decides on the PRD with decide_prd and can hire, fire and message the CEO. The employee tools (post_message, report_status, list_team, get_project, list_tasks, create_task, update_task, submit_prd, propose_team, hire_team) belong to Olympus employee subagents and need their activation id."
   }
 );
 server.registerTool(
-  "start_run",
+  "start_project",
   {
-    title: "Start a Olympus run",
-    description: "Start Olympus (if needed) and give the CEO a new product brief from the Owner. Resets the previous run. Returns the dashboard link. After this, call next_work.",
-    inputSchema: { brief: external_exports.string().min(5).max(2e3).describe("What the Owner wants built, in their words") }
+    title: "Start an Olympus project",
+    description: "Start Olympus (if needed) and give the CEO a new product brief from the Owner. Starts a new project; the team stays. Returns the dashboard link. After this, run the work loop with next_work.",
+    inputSchema: { brief: external_exports.string().min(5).max(4e3).describe("What the Owner wants built, in their words") }
   },
   ({ brief }) => guarded(async () => {
-    const up = await ensureDaemon();
-    if (!up.ok) return text(up.error, true);
-    await daemonFetch("/api/demo/start", { brief, mode: "claude-code" });
+    const res = await ownerCall("/api/project/start", { brief });
     return text(
-      `Run started. The CEO has the brief and HR is onboarding.
+      `Project \u201C${res.project.title}\u201D started. The CEO has the brief.
+Code will be written in: ${res.project.workspaceDir}
 Dashboard (share the full link with the Owner): ${dashboardUrl()}
 Next: call next_work.`
     );
@@ -36812,7 +36816,7 @@ server.registerTool(
         JSON.stringify(
           {
             status: "work",
-            instructions: "Start one Agent call per activation below in this same message (they run in parallel). Use subagent_type = agent, description = description, prompt = prompt exactly. When each returns, call activation_done with its activation_id and the agent\u2019s final report, then call next_work again.",
+            instructions: "Start one Agent call per activation below in this same message (they run in parallel). Use subagent_type = agent, description = description, prompt = prompt exactly. When each finishes (result or background notification), call activation_done with its activation_id and the agent\u2019s final report, then call next_work again.",
             activations: claim2.activations
           },
           null,
@@ -36820,14 +36824,14 @@ server.registerTool(
         )
       );
     }
-    return text(JSON.stringify(claim2, null, 2));
+    return text(JSON.stringify({ ...claim2, dashboard: dashboardUrl() }, null, 2));
   })
 );
 server.registerTool(
   "activation_done",
   {
     title: "Report a finished Olympus activation",
-    description: "Report that an employee subagent has returned. Pass its final report text.",
+    description: "Report that an employee subagent has finished. Pass its final report text.",
     inputSchema: {
       activation_id: external_exports.string().min(1).max(64),
       report: external_exports.string().max(2e4).describe("The subagent\u2019s final report, copied as it is")
@@ -36842,22 +36846,124 @@ server.registerTool(
   "company_status",
   {
     title: "Olympus status",
-    description: "Show who is in the company, what they are doing, and the state of the current run.",
+    description: "Show the project and its phase, the PRD status, the task board, who is in the company and what they are doing, and the dashboard link.",
     inputSchema: {}
   },
   () => guarded(async () => {
-    const state = await daemonFetch("/api/state");
-    const people = state.employees.map((e) => `- ${e.name}, ${e.title} (${e.status}): ${e.activity}`).join("\n");
-    const proposed = state.proposals.map((p) => `- ${p.name}: ${p.roleId} (${p.level})`).join("\n");
-    const run = state.demo.running ? `running (${state.demo.mode})` : state.demo.finishedAt ? "finished" : "idle";
+    const s = await ownerCall("/api/state");
+    const active = s.employees.filter((e) => e.status !== "fired");
+    const nameOf = (id) => id ? s.employees.find((e) => e.id === id)?.name ?? id : "the Owner";
+    const people = active.map((e) => `- ${e.name} (id ${e.id}), ${e.title}, reports to ${nameOf(e.managerId)}: ${e.status} \xB7 ${e.activity}`).join("\n");
+    const prd = s.project?.prd.at(-1);
+    const done = s.tasks.filter((t) => t.status === "done").length;
+    const lines = [
+      s.project ? `Project: ${s.project.title} \xB7 phase ${s.project.phase}` : "No project yet.",
+      prd ? `PRD v${prd.version} \u201C${prd.title}\u201D: ${prd.status.replace("_", " ")}` : "No PRD yet.",
+      `Tasks: ${done}/${s.tasks.length} done`,
+      `Mode: ${s.settings.mode} \xB7 agent runs this project: ${s.activationsThisProject}/${s.settings.maxActivationsPerProject}`,
+      s.waitingFor === "owner_prd" ? "Waiting for: the Owner to decide on the PRD." : s.waitingFor === "claude_code" ? "Waiting for: Claude Code to run /olympus:run." : "",
+      `Team:
+${people}`,
+      s.proposals.length ? `Proposed hires: ${s.proposals.map((p) => `${p.name} (${p.roleId}, ${p.level})`).join(", ")}` : "",
+      `Dashboard: ${dashboardUrl()}`
+    ];
+    return text(lines.filter(Boolean).join("\n"));
+  })
+);
+server.registerTool(
+  "owner_message",
+  {
+    title: "Message the CEO (as the Owner)",
+    description: "Send the Olympus CEO a message from the Owner: an instruction, an answer to their question, or a change. Then run the work loop so the CEO acts on it.",
+    inputSchema: { text: external_exports.string().min(1).max(4e3) }
+  },
+  ({ text: body }) => guarded(async () => {
+    await ownerCall("/api/owner/message", { text: body });
+    return text("Delivered to the CEO. Run the work loop (next_work) so they act on it.");
+  })
+);
+server.registerTool(
+  "get_prd",
+  {
+    title: "Read the latest PRD",
+    description: "Return the latest PRD the CEO submitted: version, title, status, the Owner\u2019s last comment, and the full Markdown.",
+    inputSchema: {}
+  },
+  () => guarded(async () => {
+    const s = await ownerCall("/api/state");
+    const prd = s.project?.prd.at(-1);
+    if (!s.project) return text("There is no project yet. Start one with /olympus:brief.");
+    if (!prd) return text(`Project \u201C${s.project.title}\u201D has no PRD yet; the CEO is still writing it.`);
     return text(
-      `Run: ${run} \xB7 ${state.activationsThisRun} agent runs
-Team:
-${people}${proposed ? `
-Proposed hires:
-${proposed}` : ""}
-Dashboard: ${dashboardUrl()}`
+      `PRD v${prd.version} \u201C${prd.title}\u201D \xB7 status: ${prd.status.replace("_", " ")}${prd.ownerComment ? ` \xB7 Owner\u2019s comment: ${prd.ownerComment}` : ""}
+
+${prd.markdown}`
     );
+  })
+);
+server.registerTool(
+  "decide_prd",
+  {
+    title: "Approve the PRD or ask for changes (as the Owner)",
+    description: 'The Owner\u2019s decision on the PRD that is waiting. "approve" lets the team hire and build; "changes" sends it back to the CEO with the comment. Only call this when the Owner said so.',
+    inputSchema: {
+      decision: external_exports.enum(["approve", "changes"]),
+      comment: external_exports.string().max(4e3).optional().describe('The Owner\u2019s note; required for "changes"')
+    }
+  },
+  ({ decision, comment }) => guarded(async () => {
+    await ownerCall("/api/project/prd/decision", { decision, comment: comment ?? null });
+    return text(
+      decision === "approve" ? "PRD approved. The CEO and HR will now hire and plan. Run the work loop (next_work)." : "Changes requested. The CEO will revise the PRD. Run the work loop (next_work)."
+    );
+  })
+);
+server.registerTool(
+  "owner_hire",
+  {
+    title: "Hire someone (as the Owner)",
+    description: "Hire a person into Olympus directly, for example a new CEO or Head of HR. CEO, HR and CTO have one seat each. Role ids: ceo, hr, cto, designer, writer, tech-lead, architect, qa, devops, security, database, data-ml, frontend, backend-node, backend-python, fullstack.",
+    inputSchema: {
+      role: external_exports.string().min(2).max(40),
+      name: external_exports.string().max(60).optional(),
+      level: external_exports.enum(["sde1", "sde2", "senior", "mts"]).optional()
+    }
+  },
+  ({ role, name, level }) => guarded(async () => {
+    const res = await ownerCall(
+      "/api/employees/hire",
+      { roleId: role, name: name ?? null, level: level ?? null }
+    );
+    const e = res.employee;
+    return text(`${e.name} joined as ${e.title} (id ${e.id}), reporting to ${e.managerId ?? "the Owner"}.`);
+  })
+);
+server.registerTool(
+  "owner_fire",
+  {
+    title: "Fire someone (as the Owner)",
+    description: "Fire an Olympus employee by id or name, with a reason. Their open tasks go back to the board.",
+    inputSchema: {
+      employee: external_exports.string().min(1).max(60).describe('Employee id (like "hr") or name (like "Meera")'),
+      reason: external_exports.string().max(300).optional()
+    }
+  },
+  ({ employee: employee2, reason }) => guarded(async () => {
+    const s = await ownerCall("/api/state");
+    const q = employee2.trim().toLowerCase();
+    const active = s.employees.filter((e) => e.status !== "fired");
+    const matches = active.filter(
+      (e) => e.id.toLowerCase() === q || e.name.toLowerCase() === q || e.name.toLowerCase().split(" ")[0] === q
+    );
+    if (matches.length !== 1) {
+      return text(
+        matches.length === 0 ? `Nobody active matches \u201C${employee2}\u201D. Active: ${active.map((e) => `${e.name} (${e.id})`).join(", ")}.` : `\u201C${employee2}\u201D matches several people: ${matches.map((e) => `${e.name} (${e.id})`).join(", ")}. Use the id.`,
+        true
+      );
+    }
+    const target = matches[0];
+    await daemonFetch(`/api/employees/${encodeURIComponent(target.id)}/fire`, { reason: reason?.trim() || "Owner decision" });
+    return text(`${target.name} (${target.title}) was fired.`);
   })
 );
 var activation = external_exports.string().min(1).max(64).describe("Your activation id, from the top of your instructions");
@@ -36867,54 +36973,71 @@ async function agentTool(name, activationId, input2) {
     return text(res.text, !res.ok);
   });
 }
-server.registerTool(
+var employee = (name, title, description, shape) => server.registerTool(
+  name,
+  { title, description: `Olympus employees only. ${description}`, inputSchema: { activation, ...shape } },
+  (args) => {
+    const { activation: id, ...input2 } = args;
+    return agentTool(name, id, input2);
+  }
+);
+employee(
   "post_message",
-  {
-    title: "Send a company message",
-    description: 'Olympus employees only. Send a message. `to` is an employee id (for example "ceo" or "hr"), the channel "#general", or "owner" (CEO only). A direct message wakes the recipient up, so only send one when you need or deliver something.',
-    inputSchema: {
-      activation,
-      to: external_exports.string().min(1).max(64).describe('Employee id, "#general", or "owner"'),
-      text: external_exports.string().min(1).max(4e3)
-    }
-  },
-  ({ activation: id, to, text: body }) => agentTool("post_message", id, { to, text: body })
+  "Send a company message",
+  '`to` is an employee id (from list_team), the channel "#general", or "owner" (CEO only). A direct message wakes the recipient up, so only send one when you need or deliver something.',
+  { to: external_exports.string().min(1).max(64), text: external_exports.string().min(1).max(6e3) }
 );
-server.registerTool(
+employee(
   "report_status",
-  {
-    title: "Set your dashboard status",
-    description: "Olympus employees only. Set the one-line status the Owner sees on the dashboard.",
-    inputSchema: { activation, summary: external_exports.string().min(1).max(160) }
-  },
-  ({ activation: id, summary }) => agentTool("report_status", id, { summary })
+  "Set your dashboard status",
+  "Set the one-line status the Owner sees on the dashboard.",
+  { summary: external_exports.string().min(1).max(160) }
 );
-server.registerTool(
-  "list_team",
-  {
-    title: "List the team",
-    description: "Olympus employees only. List everyone in the company, who they report to, and the roles HR can propose.",
-    inputSchema: { activation }
-  },
-  ({ activation: id }) => agentTool("list_team", id, {})
+employee("list_team", "List the team", "Everyone in the company, who they report to, proposed hires, and the role ids.", {});
+employee("get_project", "Read the project", "The brief, phase, project folder, task progress and the PRD.", {});
+employee("list_tasks", "Read the task board", "Every task with its status, owner and last note.", {});
+employee(
+  "create_task",
+  "Create a task (leads)",
+  "CEO, CTO, Tech Lead or Architect only, after the PRD is approved. One owner per task; put acceptance criteria and the files they own in the description.",
+  { title: external_exports.string().min(1).max(120), description: external_exports.string().max(4e3), assignee: external_exports.string().min(1).max(64).describe("Employee id") }
 );
-server.registerTool(
+employee(
+  "update_task",
+  "Update a task",
+  "Move your task to in_progress, review, blocked (say why) or done (say what you built and how you checked it). Leads can update any task and reassign it with `assignee`.",
+  {
+    task_id: external_exports.string().min(1).max(16),
+    status: external_exports.enum(["todo", "in_progress", "review", "blocked", "done"]),
+    note: external_exports.string().max(1e3).optional(),
+    assignee: external_exports.string().max(64).optional().describe("Leads only: reassign to this employee id")
+  }
+);
+employee(
+  "submit_prd",
+  "Submit the PRD (CEO)",
+  "CEO only. Submit a new PRD version for the Owner to approve. Write the full PRD in Markdown.",
+  { title: external_exports.string().min(1).max(120), markdown: external_exports.string().min(40).max(4e4) }
+);
+employee(
   "propose_team",
+  "Propose hires (HR)",
+  "HR only. Record a staffing proposal; it replaces any earlier one. Nobody is hired until the Owner approves the PRD.",
   {
-    title: "Propose hires (HR)",
-    description: 'Olympus HR only. Record a staffing proposal. Each hire appears on the Owner\u2019s org chart as "Proposed" under its manager. Replaces any earlier proposal. Nobody is hired until the Owner approves the PRD. Use list_team to see valid role ids.',
-    inputSchema: {
-      activation,
-      hires: external_exports.array(
-        external_exports.object({
-          role: external_exports.string().describe('Role id, for example "cto", "tech-lead", "frontend", "backend-node", "qa", "devops"'),
-          name: external_exports.string().min(2).max(60).describe("Persona name for the new hire"),
-          level: external_exports.enum(["sde1", "sde2", "senior", "mts"]),
-          reason: external_exports.string().max(200).describe("One line: why this hire")
-        })
-      ).min(1).max(12)
-    }
-  },
-  ({ activation: id, hires }) => agentTool("propose_team", id, { hires })
+    hires: external_exports.array(
+      external_exports.object({
+        role: external_exports.string().describe('Role id, for example "tech-lead", "frontend", "backend-node", "qa"'),
+        name: external_exports.string().min(2).max(60),
+        level: external_exports.enum(["sde1", "sde2", "senior", "mts"]),
+        reason: external_exports.string().max(200)
+      })
+    ).min(1).max(12)
+  }
+);
+employee(
+  "hire_team",
+  "Hire the proposed team (HR)",
+  "HR only, after the Owner approves the PRD. Hires every proposed person, or only the proposal ids given.",
+  { proposal_ids: external_exports.array(external_exports.string()).optional() }
 );
 await server.connect(new StdioServerTransport());

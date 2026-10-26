@@ -16,14 +16,16 @@
     "packages/mcp"
   ],
   "scripts": {
-    "build": "npm run build -w @olympus/daemon && npm run build -w @olympus/dashboard && node scripts/build-plugin.mjs",
+    "build": "node scripts/gen-plugin-content.mjs && npm run build -w @olympus/daemon && npm run build -w @olympus/dashboard && node scripts/build-plugin.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm test -w @olympus/daemon",
     "daemon": "node packages/daemon/dist/main.js",
     "dev:daemon": "npm run dev -w @olympus/daemon",
     "dev:dashboard": "npm run dev -w @olympus/dashboard",
     "olympus": "node plugin/dist/olympus.mjs",
-    "validate:plugin": "claude plugin validate ./plugin"
+    "validate:plugin": "claude plugin validate ./plugin",
+    "gen:plugin": "node scripts/gen-plugin-content.mjs",
+    "smoke": "node scripts/smoke-mcp.mjs"
   },
   "devDependencies": {
     "@types/node": "26.6.5",

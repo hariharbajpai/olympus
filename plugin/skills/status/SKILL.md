@@ -1,15 +1,10 @@
 ---
 name: status
-description: Show whether the Olympus company daemon is running, who is working, the current run and its spend. Use when the user asks about Olympus's status.
-allowed-tools: Bash(node:*)
+description: Show Olympus’s state: the project and its phase, the PRD, the task board, who is working, and the dashboard link.
+allowed-tools: mcp__plugin_olympus_company__company_status
 ---
 
 # Olympus status
 
-Run:
-
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/dist/olympus.mjs" status
-```
-
-Summarise the output for the Owner in two or three short lines: running or not, who is doing what, and the spend. Include the dashboard link if it printed one.
+Call `company_status` and summarise it for the Owner in a few short lines: the project and its
+phase, the PRD status, task progress, who is working, and the dashboard link.

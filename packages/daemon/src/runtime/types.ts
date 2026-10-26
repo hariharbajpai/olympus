@@ -1,10 +1,24 @@
-import type { ActivationOutcome, Employee, EmployeeId, Level, RuntimeMode } from '@olympus/shared';
+import type { ActivationOutcome, Employee, EmployeeId, RuntimeMode } from '@olympus/shared';
+
+export type InboxKind =
+  | 'brief'
+  | 'owner'
+  | 'prd_approved'
+  | 'prd_changes'
+  | 'task'
+  | 'task_update'
+  | 'onboarding'
+  | 'dm'
+  | 'system';
 
 export interface InboxItem {
   from: EmployeeId | 'owner' | 'system';
   fromLabel: string;
+  kind: InboxKind;
   text: string;
   ts: string;
+  /** The employee whose action caused this message (for system notices about tasks). */
+  causedBy?: EmployeeId;
 }
 
 export interface ToolResult {
@@ -12,19 +26,9 @@ export interface ToolResult {
   text: string;
 }
 
-export interface HireProposalInput {
-  role: string;
-  name: string;
-  level: Level;
-  reason: string;
-}
-
-/** Company actions an employee can take. Each call is checked by the company, not trusted. */
+/** Company actions an employee can take. Every call is checked by the company, not trusted. */
 export interface CompanyTools {
-  postMessage(to: string, text: string): ToolResult;
-  reportStatus(summary: string): ToolResult;
-  listTeam(): ToolResult;
-  proposeTeam(hires: HireProposalInput[]): ToolResult;
+  call(tool: string, input: Record<string, unknown>): ToolResult;
 }
 
 export type AgentStreamEvent =
@@ -38,7 +42,7 @@ export interface ActivationRequest {
   agentType: string;
   /** Short label for the Claude Code Agent call, for example "Aarav (CEO): 1 new message". */
   description: string;
-  /** Everything the employee needs for this activation: who they are, the team, new messages. */
+  /** Everything the employee needs for this activation: who they are, the team, the project, new messages. */
   prompt: string;
   inbox: InboxItem[];
   abortController: AbortController;
@@ -72,11 +76,23 @@ export function summarizeToolCall(tool: string, input: unknown): string {
     case 'report_status':
       return `status: ${clip(args.summary)}`;
     case 'list_team':
-      return 'checked the team list';
+      return 'checked the team';
+    case 'get_project':
+      return 'read the project and PRD';
+    case 'list_tasks':
+      return 'checked the task board';
+    case 'create_task':
+      return `created a task for ${clip(args.assignee, 30)}: ${clip(args.title, 70)}`;
+    case 'update_task':
+      return `${clip(args.task_id, 12)} → ${clip(args.status, 14)}${args.note ? `: ${clip(args.note, 70)}` : ''}`;
+    case 'submit_prd':
+      return `submitted the PRD “${clip(args.title, 60)}”`;
     case 'propose_team': {
       const hires = Array.isArray(args.hires) ? args.hires.length : 0;
       return `proposed a team of ${hires}`;
     }
+    case 'hire_team':
+      return 'hired the proposed team';
     default:
       return `${tool}(${clip(JSON.stringify(args), 60)})`;
   }

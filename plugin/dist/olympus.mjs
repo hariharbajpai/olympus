@@ -124,12 +124,12 @@ function openBrowser(url) {
 async function summary() {
   const state = await daemonFetch("/api/state").catch(() => null);
   if (!state) return "";
-  const team = state.employees.map((e) => `${e.name} (${e.title}): ${e.status}`).join("; ");
-  const run = state.demo.running ? `running (${state.demo.mode})` : state.demo.finishedAt ? `finished (${state.activationsThisRun} agent runs)` : "idle";
+  const team = state.employees.filter((e) => e.status !== "fired").map((e) => `${e.name} (${e.title}): ${e.status}`).join("; ");
+  const project = state.project ? `${state.project.title} \xB7 phase ${state.project.phase} \xB7 tasks ${state.tasks.filter((t) => t.status === "done").length}/${state.tasks.length}` : "none yet";
   return [
-    `Team: ${team}`,
-    `Run: ${run}`,
-    "Agents run inside your Claude Code session: use /olympus:brief <what to build>."
+    `Team: ${team || "nobody"}`,
+    `Project: ${project}`,
+    `Mode: ${state.settings.mode === "claude-code" ? "Claude Code (agents run in your session: /olympus:brief, /olympus:run)" : "simulated"}`
   ].join("\n");
 }
 async function start(open) {

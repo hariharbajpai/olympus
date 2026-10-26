@@ -8,7 +8,7 @@ export type EmployeeStatus = 'idle' | 'queued' | 'working' | 'fired';
 /**
  * - `claude-code`: employees run as Claude Code subagents inside the Owner's Claude Code
  *   session (the app's own login). The session picks work up with /olympus:brief or /olympus:run.
- * - `simulated`: a free, scripted stand-in run by the daemon, for testing.
+ * - `simulated`: a free, scripted stand-in run by the daemon, for demos and tests.
  */
 export type RuntimeMode = 'claude-code' | 'simulated';
 
@@ -31,7 +31,8 @@ export interface Employee {
   name: string;
   roleId: string;
   title: string;
-  /** Who this person reports to. null means the Owner. */
+  level: Level | null;
+  /** Who this person reports to, worked out from the org structure. null means the Owner. */
   managerId: EmployeeId | null;
   model: string;
   effort: Effort;
@@ -40,10 +41,13 @@ export interface Employee {
   activity: string;
   activations: number;
   lastDurationMs: number | null;
+  hiredAt: string;
+  hiredBy: EmployeeId | 'owner' | 'founding';
+  firedAt?: string;
   firedReason?: string;
 }
 
-/** A hire HR has proposed. Nobody is hired until the Owner approves the PRD (Phase 1). */
+/** A hire HR has proposed. HR can hire them only after the Owner approves the PRD. */
 export interface ProposedHire {
   id: string;
   roleId: string;
@@ -53,6 +57,51 @@ export interface ProposedHire {
   reason: string;
   proposedBy: EmployeeId;
   ts: string;
+}
+
+export type ProjectPhase = 'planning' | 'prd_review' | 'approved' | 'building' | 'done';
+
+export interface PrdVersion {
+  version: number;
+  title: string;
+  markdown: string;
+  submittedBy: EmployeeId;
+  submittedAt: string;
+  status: 'pending' | 'approved' | 'changes_requested' | 'superseded';
+  ownerComment: string | null;
+  decidedAt: string | null;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  brief: string;
+  phase: ProjectPhase;
+  /** Folder where engineers write the product's code. */
+  workspaceDir: string;
+  startedAt: string;
+  prd: PrdVersion[];
+}
+
+export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'blocked' | 'done';
+
+export interface TaskNote {
+  ts: string;
+  by: EmployeeId | 'owner' | 'system';
+  text: string;
+  status?: TaskStatus;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  assigneeId: EmployeeId | null;
+  status: TaskStatus;
+  createdBy: EmployeeId;
+  createdAt: string;
+  updatedAt: string;
+  notes: TaskNote[];
 }
 
 /** Where a message goes: an employee id, a channel like "#general", or "owner". */
@@ -66,14 +115,6 @@ export interface ChatMessage {
   text: string;
 }
 
-export interface DemoState {
-  running: boolean;
-  mode: RuntimeMode | null;
-  brief: string | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-}
-
 export interface HostState {
   /** Activations waiting for the Claude Code session to pick them up. */
   waiting: number;
@@ -82,28 +123,49 @@ export interface HostState {
   lastSeenAt: string | null;
 }
 
+export interface Settings {
+  mode: RuntimeMode;
+  maxConcurrency: number;
+  maxActivationsPerEmployee: number;
+  maxActivationsPerProject: number;
+}
+
+/** Timestamps the dashboard turns into charts. */
+export interface Metrics {
+  activations: string[];
+  tasksDone: string[];
+  messages: string[];
+}
+
 export interface CompanyState {
   companyName: string;
-  limits: {
-    maxConcurrency: number;
-    maxActivationsPerEmployee: number;
-    maxActivationsPerRun: number;
-  };
-  activationsThisRun: number;
+  settings: Settings;
+  activationsThisProject: number;
   roles: OrgRole[];
+  /** Everyone, including people who were fired (status "fired"). */
   employees: Employee[];
   proposals: ProposedHire[];
+  project: Project | null;
+  tasks: Task[];
   messages: ChatMessage[];
-  demo: DemoState;
   host: HostState;
+  metrics: Metrics;
+  /** True while any employee has unread messages or is working. */
+  busy: boolean;
+  /** What the company is waiting on, if anything. */
+  waitingFor: 'owner_prd' | 'claude_code' | null;
 }
 
 export type ActivationOutcome = 'success' | 'error' | 'aborted';
 
 export type CompanyEventPayload =
   | { type: 'company.reset' }
-  | { type: 'demo.started'; mode: RuntimeMode; brief: string }
-  | { type: 'demo.finished'; activations: number }
+  | { type: 'settings.updated'; settings: Settings }
+  | { type: 'project.started'; projectId: string; title: string }
+  | { type: 'project.phase_changed'; phase: ProjectPhase }
+  | { type: 'prd.submitted'; version: number; title: string; by: EmployeeId }
+  | { type: 'prd.decided'; version: number; decision: 'approved' | 'changes_requested'; comment: string | null }
+  | { type: 'employee.hired'; employeeId: EmployeeId; by: EmployeeId | 'owner' | 'founding' }
   | { type: 'employee.status_changed'; employeeId: EmployeeId; status: EmployeeStatus; activity: string }
   | { type: 'employee.fired'; employeeId: EmployeeId; reason: string }
   | { type: 'activation.started'; employeeId: EmployeeId; activationId: string; trigger: string }
@@ -120,6 +182,8 @@ export type CompanyEventPayload =
   | { type: 'agent.action'; employeeId: EmployeeId; tool: string; summary: string }
   | { type: 'message.posted'; message: ChatMessage }
   | { type: 'team.proposed'; employeeId: EmployeeId; count: number }
+  | { type: 'task.created'; taskId: string; title: string; assigneeId: EmployeeId | null; by: EmployeeId }
+  | { type: 'task.updated'; taskId: string; status: TaskStatus; by: EmployeeId | 'system'; note: string | null }
   | { type: 'system.notice'; level: 'info' | 'warning' | 'error'; text: string };
 
 export type CompanyEventType = CompanyEventPayload['type'];
@@ -133,7 +197,7 @@ export type CompanyEvent = CompanyEventPayload & {
 /** Messages the daemon sends over the WebSocket. */
 export type ServerFrame =
   | { kind: 'hello'; state: CompanyState; recentEvents: CompanyEvent[] }
-  | { kind: 'event'; event: CompanyEvent; state: CompanyState };
+  | { kind: 'events'; events: CompanyEvent[]; state: CompanyState };
 
 export interface HealthResponse {
   ok: true;
@@ -155,10 +219,23 @@ export interface HostActivation {
 export type HostClaimResponse =
   | { status: 'work'; activations: HostActivation[] }
   | { status: 'busy'; running: number; message: string }
-  | { status: 'finished'; message: string; ownerMessages: string[] }
+  | { status: 'finished'; message: string; waitingFor: 'owner_prd' | null; ownerMessages: string[] }
   | { status: 'no_run'; message: string };
 
 export interface AgentToolResponse {
   ok: boolean;
   text: string;
 }
+
+/** Tools employees can call, by name. The daemon checks who may call which. */
+export type EmployeeToolName =
+  | 'post_message'
+  | 'report_status'
+  | 'list_team'
+  | 'get_project'
+  | 'list_tasks'
+  | 'create_task'
+  | 'update_task'
+  | 'submit_prd'
+  | 'propose_team'
+  | 'hire_team';
